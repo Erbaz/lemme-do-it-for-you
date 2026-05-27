@@ -31,7 +31,7 @@ class LocateResult:
 class SelfCorrectingVisionAgent:
     def __init__(
         self,
-        model_name: str = "qwen3-vl:8b-instruct",
+        model_name: str = "qwen3-vl:4b-instruct",
         context_window: int = 8192,
         request_timeout: float = 300.0,
         max_image_size: int = 1280,
@@ -61,6 +61,17 @@ class SelfCorrectingVisionAgent:
 
     def _norm_to_model_img(self, nx, ny, mw, mh):
         return int((nx / 1000) * mw), int((ny / 1000) * mh)
+
+
+    def _capture_screenshot_with_scaling(self, output_path:str):
+        sw, sh = pyautogui.size()
+        # Scale for model image
+        scale = self.max_image_size / max(sw, sh)
+        mw, mh = int(sw * scale), int(sh * scale)
+        
+        img = pyautogui.screenshot()
+        img = img.resize((mw, mh), Image.Resampling.LANCZOS)
+        img.save(output_path)
 
     # ==================== Image Processing ====================
 
@@ -119,6 +130,7 @@ Return ONLY JSON: {{"offset_x": <int>, "offset_y": <int>}}"""
     def _chat(self, image_path: str, prompt: str) -> dict:
         msg = [ChatMessage(role=MessageRole.USER, blocks=[ImageBlock(path=image_path), TextBlock(text=prompt)])]
         response = self.llm.chat(msg, additional_kwargs={"format": "json"})
+        print(f"response: {response}")
         content = "".join([b.text if hasattr(b, 'text') else b.content for b in response.message.blocks])
         match = re.search(r"\{[\s\S]*\}", content)
         return json.loads(match.group(0))
@@ -159,6 +171,11 @@ Return ONLY JSON: {{"offset_x": <int>, "offset_y": <int>}}"""
             
             # Small sleep between steps to control overall speed
             time.sleep(duration / steps)
+    
+    def _clear_screenshots(self):
+        for file in os.listdir("."):
+            if file.endswith(".png"):
+                os.remove(file)
 
     def locate_element(self, target: str, max_iterations: int = 5):
         sw, sh = pyautogui.size()
@@ -169,35 +186,56 @@ Return ONLY JSON: {{"offset_x": <int>, "offset_y": <int>}}"""
         self.capture_processed_screenshot(path)
         data = self._chat(path, self._get_locate_prompt(target))
         curr_nx, curr_ny = int(data["x"]), int(data["y"])
+        try:
+            for i in range(1, max_iterations + 1):
+                # Move Native Mouse
+                px, py = self._norm_to_native(curr_nx, curr_ny)
+                self._log(f"Iteration {i}: Checking Native ({px}, {py}) | Norm ({curr_nx}, {curr_ny})", "STEP")
+                self._humanly_move_cursor_to(px, py)
 
-        for i in range(1, max_iterations + 1):
-            # Move Native Mouse
+                # Capture with Markers
+                path = f"iter_{i}.png"
+                self.capture_processed_screenshot(path, curr_norm=(curr_nx, curr_ny))
+
+                # 1. Verify (Boolean only, no rambling)
+                v_data = self._chat(path, self._get_verify_prompt(target, curr_nx, curr_ny))
+                if v_data.get("confirmed") is True:
+                    self._log("SUCCESS: Confirmed!", "DONE")
+                    return LocateResult(target, px, py, "high", i, sw, sh)
+
+                # 2. Get Offset
+                self.history.insert(0, (curr_nx, curr_ny))
+                if len(self.history) > 3: self.history.pop()
+                
+                o_data = self._chat(path, self._get_offset_prompt(target, curr_nx, curr_ny))
+                curr_nx = max(0, min(1000, curr_nx + int(o_data.get("offset_x", 0))))
+                curr_ny = max(0, min(1000, curr_ny + int(o_data.get("offset_y", 0))))
+
             px, py = self._norm_to_native(curr_nx, curr_ny)
-            self._log(f"Iteration {i}: Checking Native ({px}, {py}) | Norm ({curr_nx}, {curr_ny})", "STEP")
-            self._humanly_move_cursor_to(px, py)
+            return LocateResult(target, px, py, "low", max_iterations, sw, sh)
+        
+        finally:
+            self._clear_screenshots()
 
-            # Capture with Markers
-            path = f"iter_{i}.png"
-            self.capture_processed_screenshot(path, curr_norm=(curr_nx, curr_ny))
-
-            # 1. Verify (Boolean only, no rambling)
-            v_data = self._chat(path, self._get_verify_prompt(target, curr_nx, curr_ny))
-            if v_data.get("confirmed") is True:
-                self._log("SUCCESS: Confirmed!", "DONE")
-                return LocateResult(target, px, py, "high", i, sw, sh)
-
-            # 2. Get Offset
-            self.history.insert(0, (curr_nx, curr_ny))
-            if len(self.history) > 3: self.history.pop()
-            
-            o_data = self._chat(path, self._get_offset_prompt(target, curr_nx, curr_ny))
-            curr_nx = max(0, min(1000, curr_nx + int(o_data.get("offset_x", 0))))
-            curr_ny = max(0, min(1000, curr_ny + int(o_data.get("offset_y", 0))))
-
-        px, py = self._norm_to_native(curr_nx, curr_ny)
-        return LocateResult(target, px, py, "low", max_iterations, sw, sh)
+    def analyze_current_screen(self):
+        path = "current_screen.png"
+        self._capture_screenshot_with_scaling(path)
+        prompt = f"""
+        Analyze the current screen and describe precisely in a bulleted list.
+        You must tell me what window is open, what icons are available, what buttons are shown and / or disabled, what page is open if what you see is a website. What tabs are possibly open and what other UI elements are going to help me take the next step of navigating.
+        """
+        msg = [ChatMessage(role=MessageRole.USER, blocks=[ImageBlock(path=path), TextBlock(text=prompt)])]
+        response = self.llm.chat(msg)
+        content = "".join([b.text if hasattr(b, 'text') else b.content for b in response.message.blocks])
+        self._clear_screenshots()
+        return content
+        
 
 if __name__ == "__main__":
     agent = SelfCorrectingVisionAgent()
-    res = agent.locate_element("the Recycle Bin icon")
-    print(f"\nRESULT: ({res.x}, {res.y})")
+    if(input("Do you want to analyze the current screen? (y/n): ") == "y"):
+        analysis = agent.analyze_current_screen()
+        print(f"\nANALYSIS: {analysis}")
+    else:
+        res = agent.locate_element("the Recycle Bin icon")
+        print(f"\nRESULT: ({res.x}, {res.y})")
