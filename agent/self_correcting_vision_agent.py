@@ -7,6 +7,7 @@ from typing import Optional, List, Tuple
 
 import pyautogui
 from llama_index.llms.ollama import Ollama
+from llama_index.core import Settings
 from llama_index.core.base.llms.types import ChatResponse, TextBlock, ThinkingBlock
 from llama_index.core.llms import ChatMessage, ImageBlock, MessageRole
 from PIL import Image, ImageDraw
@@ -40,7 +41,7 @@ class SelfCorrectingVisionAgent:
         self.model_name = model_name
         self.max_image_size = max_image_size
         self.verbose = verbose
-        self.llm = Ollama(
+        self.llm = Settings.llm if Settings.llm else Ollama(
             model=self.model_name,
             request_timeout=request_timeout,
             context_window=context_window,
@@ -122,14 +123,14 @@ Return ONLY JSON: {{"confirmed": true or false}}"""
         return f"""The RED crosshair is at normalized coordinates ({nx}, {ny}). 
 It is NOT on the center of the "{target}".
 
-Task: Nudge the RED crosshair. How many units (on a 0-1000 scale) must we move it in X and Y to reach the center of the "{target}"?
+Task: Nudge the RED crosshair. How many units (on a 0-1000 scale) must we move it in X and Y to reach the center of the "{target}"? Use previous coordinates marked in image to understand how much to nudge in proportion.
 Return ONLY JSON: {{"offset_x": <int>, "offset_y": <int>}}"""
 
     # ==================== Main Workflow ====================
 
     def _chat(self, image_path: str, prompt: str) -> dict:
         msg = [ChatMessage(role=MessageRole.USER, blocks=[ImageBlock(path=image_path), TextBlock(text=prompt)])]
-        response = self.llm.chat(msg, additional_kwargs={"format": "json"})
+        response = self.llm.chat(msg, additional_kwargs={"format": "json", "num_predict": 1024})
         print(f"response: {response}")
         content = "".join([b.text if hasattr(b, 'text') else b.content for b in response.message.blocks])
         match = re.search(r"\{[\s\S]*\}", content)
@@ -217,25 +218,28 @@ Return ONLY JSON: {{"offset_x": <int>, "offset_y": <int>}}"""
         finally:
             self._clear_screenshots()
 
-    def analyze_current_screen(self):
+    def analyze_current_screen(self, prompt:str | None) -> str:
+        self._log(f"prompt from master agent: {prompt}")
         path = "current_screen.png"
         self._capture_screenshot_with_scaling(path)
         prompt = f"""
         Analyze the current screen and describe precisely in a bulleted list.
         You must tell me what window is open, what icons are available, what buttons are shown and / or disabled, what page is open if what you see is a website. What tabs are possibly open and what other UI elements are going to help me take the next step of navigating.
-        """
+        """ if not prompt else prompt
         msg = [ChatMessage(role=MessageRole.USER, blocks=[ImageBlock(path=path), TextBlock(text=prompt)])]
-        response = self.llm.chat(msg)
+        response = self.llm.chat(msg, additional_kwargs={"num_predict": 1024})
+        self._log(f"response: {response}")
         content = "".join([b.text if hasattr(b, 'text') else b.content for b in response.message.blocks])
         self._clear_screenshots()
         return content
         
 
 if __name__ == "__main__":
+    Settings.llm = Ollama(model="qwen3-vl:4b-instruct", request_timeout=120.0, context_window=8192)
     agent = SelfCorrectingVisionAgent()
     if(input("Do you want to analyze the current screen? (y/n): ") == "y"):
         analysis = agent.analyze_current_screen()
         print(f"\nANALYSIS: {analysis}")
     else:
-        res = agent.locate_element("the Recycle Bin icon")
+        res = agent.locate_element(target="the docker app")
         print(f"\nRESULT: ({res.x}, {res.y})")
