@@ -14,7 +14,7 @@ def test_vision_agent():
     print("Initializing Vision Agent (qwen3-vl:8b)...")
     print("(First run may take several minutes while Ollama loads the model.)")
     try:
-        vision_agent = VisionAgent(model_name="qwen3-vl:8b")
+        vision_agent = VisionAgent(model_name="qwen3-vl:8b-instruct")
         screen_w, screen_h = pyautogui.size()
         target = "the close window button"
         print(f"Screen: {screen_w}x{screen_h} | Locating: {target}")
