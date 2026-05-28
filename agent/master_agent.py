@@ -14,6 +14,7 @@ SYS_PROMPT = f"""
     You are given a set of tools that you can use to interact with the computer.
     Some of these tools have a vision agent behind them that will do as you instruct.
     For example, if user asks you to "open the browser", you would have to use analyze_screen tool to ask vision agent to describe current screen state and identify if a Google Chrome icon is present. If tool response states that icon is present, then you would call move_mouse tool to ask the vision agent to move mouse to that icon. Once confirmed, you would use the relevant tool to mouse click and see if you can open the browser. You would confirm if task completed by analyzing screen through vision agent.
+    Always call analyze_screen after a mouse or keyboard event has taken place to understand what change has taken place, so that next step is made clear. For example, once you analyze the screen, you can identify where to move the mouse next or click at the current spot again.
     Always confirm if user instruction is successfully accomplished by calling analyze_screen tool.
     Follow the ReAct pattern to solve the task.
     Current OS you will be working with: {platform.system()}
@@ -71,5 +72,6 @@ class MasterAgent:
 
 
 if __name__ == "__main__":
+    user_instruction = input("User: ")
     agent = MasterAgent()
-    asyncio.run(agent.chat("Open google chrome for me"))
+    asyncio.run(agent.chat(user_instruction))
