@@ -1,8 +1,11 @@
 import random
 import time
+import asyncio
 import pyautogui
 from llama_index.core.tools import FunctionTool
 from agent.self_correcting_vision_agent import SelfCorrectingVisionAgent
+from constants.allowed_hotkeys import ALLOWED_HOTKEYS
+from typing import List
 
 
 # Initialize the vision agent globally or lazily
@@ -107,23 +110,40 @@ def press_key(key: str) -> str:
     except Exception as e:
         return f"Failed to press key: {str(e)}"
 
-def execute_hotkey(command: str) -> str:
-        """
-        Executes an allowed keyboard shortcut. 
-        Supported commands: 'save', 'copy', 'paste', 'refresh'.
-        """
-        whitelist = {
-            "save": ["ctrl", "s"],
-            "copy": ["ctrl", "c"],
-            "paste": ["ctrl", "v"],
-            "refresh": ["f5"]
-        }
-        if command not in whitelist:
-            return f"Error: Command '{command}' is not in the whitelist. Only {', '.join(whitelist.keys())} are allowed."
-        
-        keys = whitelist[command]
-        pyautogui.hotkey(*keys)
-        return f"Successfully executed {command} ({'+'.join(keys)})"
+
+def execute_hotkey(keys: List[str]) -> str:
+    """
+    Executes a keyboard hotkey by combining the provided keys.
+    
+    Args:
+        keys: A list of keys to press simultaneously. 
+              Examples: ["ctrl", "c"], ["alt", "tab"], ["f5"]
+    
+    Returns:
+        A message confirming the hotkey execution or an error.
+    """
+    
+    # Validate input
+    if not isinstance(keys, list) or not keys:
+        return "Error: 'keys' must be a non-empty list of key names."
+    
+    # Normalize keys
+    keys_lower = [k.lower().strip() for k in keys]
+    
+    # Check if combination is in whitelist
+    if keys_lower not in ALLOWED_HOTKEYS:
+        return f"Error: Hotkey combination {keys_lower} is not allowed."
+    
+    try:
+        pyautogui.hotkey(*keys_lower)
+        return f"Successfully executed hotkey: {'+'.join(keys_lower)}"
+    except Exception as e:
+        return f"Error executing hotkey: {str(e)}"
+
+
+async def delay_callback():
+    await asyncio.sleep(3) 
+    return None
 
 
 agent_tools = [
@@ -131,8 +151,8 @@ agent_tools = [
     FunctionTool.from_defaults(fn=move_mouse),
     FunctionTool.from_defaults(fn=left_click),
     FunctionTool.from_defaults(fn=right_click),
-    FunctionTool.from_defaults(fn=double_click),
+    FunctionTool.from_defaults(fn=double_click, async_callback=delay_callback),
     FunctionTool.from_defaults(fn=type_text),
-    FunctionTool.from_defaults(fn=press_key),
-    FunctionTool.from_defaults(fn=execute_hotkey)
+    FunctionTool.from_defaults(fn=press_key, async_callback=delay_callback),
+    FunctionTool.from_defaults(fn=execute_hotkey, async_callback=delay_callback)
 ]
