@@ -909,6 +909,60 @@
         "documentation": {}
     },
     {
+        "label": "filepath",
+        "kind": 5,
+        "importPath": "readme_append",
+        "description": "readme_append",
+        "peekOfCode": "filepath = r'C:\\Users\\pc\\Desktop\\lemme-do-it-for-you\\README.md'\nwith open(filepath, 'a') as f:\n    f.write(\"\"\"\n## Configuration\n### `SelfCorrectingVisionAgentV3` Parameters\n```python\nSelfCorrectingVisionAgentV3(\n    model_name=\"qwen3-vl:4b-instruct\",\n    context_window=8192, request_timeout=300.0, max_image_size=1280,\n    grid_divisions=5, verbose=True, cleanup_screenshots=True,",
+        "detail": "readme_append",
+        "documentation": {}
+    },
+    {
+        "label": "result",
+        "kind": 5,
+        "importPath": "readme_append",
+        "description": "readme_append",
+        "peekOfCode": "result = agent.locate_element(target=\"chrome icon\", max_iterations=5)\n```\nReturns a `LocateResult` dataclass with `target`, `x`, `y`, `confidence`, `iterations`, `screen_width`, `screen_height`.\n---\n## How It Works\n### Overview\nThe agent uses a **visual iterative convergence** loop to locate GUI elements. It combines a multimodal vision model (LLM with image input) with a coordinate system that works entirely in normalized space.\n### Workflow\n```\nSTEP 0: Initial Guess -> Capture screen -> Ask LLM for (x, y) coords",
+        "detail": "readme_append",
+        "documentation": {}
+    },
+    {
+        "label": "t",
+        "kind": 5,
+        "importPath": "readme_append",
+        "description": "readme_append",
+        "peekOfCode": "t = pytweening.easeInOutQuad(i / steps)\ncurr_x = (1-t)**2 * start_x + 2(1-t)*t * mid_x + t**2 * target_x\n```\n---\n## API Reference\n### `SelfCorrectingVisionAgentV3`\n- `locate_element(target, max_iterations=5)` -> `LocateResult`\n- `analyze_current_screen(prompt)` -> text description\n### Tool Functions (`agent.tools`)\n| Function | Description |",
+        "detail": "readme_append",
+        "documentation": {}
+    },
+    {
+        "label": "curr_x",
+        "kind": 5,
+        "importPath": "readme_append",
+        "description": "readme_append",
+        "peekOfCode": "curr_x = (1-t)**2 * start_x + 2(1-t)*t * mid_x + t**2 * target_x\n```\n---\n## API Reference\n### `SelfCorrectingVisionAgentV3`\n- `locate_element(target, max_iterations=5)` -> `LocateResult`\n- `analyze_current_screen(prompt)` -> text description\n### Tool Functions (`agent.tools`)\n| Function | Description |\n|---|---|",
+        "detail": "readme_append",
+        "documentation": {}
+    },
+    {
+        "label": "agent",
+        "kind": 5,
+        "importPath": "readme_append",
+        "description": "readme_append",
+        "peekOfCode": "agent = SelfCorrectingVisionAgentV3(cleanup_screenshots=False)\nresult = agent.locate_element(target=\"my target\")\n# iter_0.png through iter_N.png preserved in working directory\n```\n---\n## License\nMIT\n\"\"\")\nprint('Done!')",
+        "detail": "readme_append",
+        "documentation": {}
+    },
+    {
+        "label": "result",
+        "kind": 5,
+        "importPath": "readme_append",
+        "description": "readme_append",
+        "peekOfCode": "result = agent.locate_element(target=\"my target\")\n# iter_0.png through iter_N.png preserved in working directory\n```\n---\n## License\nMIT\n\"\"\")\nprint('Done!')",
+        "detail": "readme_append",
+        "documentation": {}
+    },
+    {
         "label": "test_vision_agent",
         "kind": 2,
         "importPath": "test_vision_agent",
