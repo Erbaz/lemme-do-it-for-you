@@ -1,0 +1,920 @@
+[
+    {
+        "label": "platform",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "platform",
+        "description": "platform",
+        "detail": "platform",
+        "documentation": {}
+    },
+    {
+        "label": "asyncio",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "asyncio",
+        "description": "asyncio",
+        "detail": "asyncio",
+        "documentation": {}
+    },
+    {
+        "label": "agent.model",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "agent.model",
+        "description": "agent.model",
+        "detail": "agent.model",
+        "documentation": {}
+    },
+    {
+        "label": "Ollama",
+        "importPath": "llama_index.llms.ollama",
+        "description": "llama_index.llms.ollama",
+        "isExtraImport": true,
+        "detail": "llama_index.llms.ollama",
+        "documentation": {}
+    },
+    {
+        "label": "Ollama",
+        "importPath": "llama_index.llms.ollama",
+        "description": "llama_index.llms.ollama",
+        "isExtraImport": true,
+        "detail": "llama_index.llms.ollama",
+        "documentation": {}
+    },
+    {
+        "label": "Ollama",
+        "importPath": "llama_index.llms.ollama",
+        "description": "llama_index.llms.ollama",
+        "isExtraImport": true,
+        "detail": "llama_index.llms.ollama",
+        "documentation": {}
+    },
+    {
+        "label": "Settings",
+        "importPath": "llama_index.core",
+        "description": "llama_index.core",
+        "isExtraImport": true,
+        "detail": "llama_index.core",
+        "documentation": {}
+    },
+    {
+        "label": "Settings",
+        "importPath": "llama_index.core",
+        "description": "llama_index.core",
+        "isExtraImport": true,
+        "detail": "llama_index.core",
+        "documentation": {}
+    },
+    {
+        "label": "Settings",
+        "importPath": "llama_index.core",
+        "description": "llama_index.core",
+        "isExtraImport": true,
+        "detail": "llama_index.core",
+        "documentation": {}
+    },
+    {
+        "label": "Settings",
+        "importPath": "llama_index.core",
+        "description": "llama_index.core",
+        "isExtraImport": true,
+        "detail": "llama_index.core",
+        "documentation": {}
+    },
+    {
+        "label": "Settings",
+        "importPath": "llama_index.core",
+        "description": "llama_index.core",
+        "isExtraImport": true,
+        "detail": "llama_index.core",
+        "documentation": {}
+    },
+    {
+        "label": "ReActAgent",
+        "importPath": "llama_index.core.agent",
+        "description": "llama_index.core.agent",
+        "isExtraImport": true,
+        "detail": "llama_index.core.agent",
+        "documentation": {}
+    },
+    {
+        "label": "Memory",
+        "importPath": "llama_index.core.memory",
+        "description": "llama_index.core.memory",
+        "isExtraImport": true,
+        "detail": "llama_index.core.memory",
+        "documentation": {}
+    },
+    {
+        "label": "Context",
+        "importPath": "llama_index.core.workflow",
+        "description": "llama_index.core.workflow",
+        "isExtraImport": true,
+        "detail": "llama_index.core.workflow",
+        "documentation": {}
+    },
+    {
+        "label": "AgentStream",
+        "importPath": "llama_index.core.agent.workflow",
+        "description": "llama_index.core.agent.workflow",
+        "isExtraImport": true,
+        "detail": "llama_index.core.agent.workflow",
+        "documentation": {}
+    },
+    {
+        "label": "agent_tools",
+        "importPath": "agent.tools",
+        "description": "agent.tools",
+        "isExtraImport": true,
+        "detail": "agent.tools",
+        "documentation": {}
+    },
+    {
+        "label": "os",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "os",
+        "description": "os",
+        "detail": "os",
+        "documentation": {}
+    },
+    {
+        "label": "load_dotenv",
+        "importPath": "dotenv",
+        "description": "dotenv",
+        "isExtraImport": true,
+        "detail": "dotenv",
+        "documentation": {}
+    },
+    {
+        "label": "json",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "json",
+        "description": "json",
+        "detail": "json",
+        "documentation": {}
+    },
+    {
+        "label": "re",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "re",
+        "description": "re",
+        "detail": "re",
+        "documentation": {}
+    },
+    {
+        "label": "time",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "time",
+        "description": "time",
+        "detail": "time",
+        "documentation": {}
+    },
+    {
+        "label": "dataclass",
+        "importPath": "dataclasses",
+        "description": "dataclasses",
+        "isExtraImport": true,
+        "detail": "dataclasses",
+        "documentation": {}
+    },
+    {
+        "label": "dataclass",
+        "importPath": "dataclasses",
+        "description": "dataclasses",
+        "isExtraImport": true,
+        "detail": "dataclasses",
+        "documentation": {}
+    },
+    {
+        "label": "dataclass",
+        "importPath": "dataclasses",
+        "description": "dataclasses",
+        "isExtraImport": true,
+        "detail": "dataclasses",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Tuple",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Tuple",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Tuple",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "pyautogui",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "pyautogui",
+        "description": "pyautogui",
+        "detail": "pyautogui",
+        "documentation": {}
+    },
+    {
+        "label": "ChatResponse",
+        "importPath": "llama_index.core.base.llms.types",
+        "description": "llama_index.core.base.llms.types",
+        "isExtraImport": true,
+        "detail": "llama_index.core.base.llms.types",
+        "documentation": {}
+    },
+    {
+        "label": "TextBlock",
+        "importPath": "llama_index.core.base.llms.types",
+        "description": "llama_index.core.base.llms.types",
+        "isExtraImport": true,
+        "detail": "llama_index.core.base.llms.types",
+        "documentation": {}
+    },
+    {
+        "label": "ThinkingBlock",
+        "importPath": "llama_index.core.base.llms.types",
+        "description": "llama_index.core.base.llms.types",
+        "isExtraImport": true,
+        "detail": "llama_index.core.base.llms.types",
+        "documentation": {}
+    },
+    {
+        "label": "ChatResponse",
+        "importPath": "llama_index.core.base.llms.types",
+        "description": "llama_index.core.base.llms.types",
+        "isExtraImport": true,
+        "detail": "llama_index.core.base.llms.types",
+        "documentation": {}
+    },
+    {
+        "label": "TextBlock",
+        "importPath": "llama_index.core.base.llms.types",
+        "description": "llama_index.core.base.llms.types",
+        "isExtraImport": true,
+        "detail": "llama_index.core.base.llms.types",
+        "documentation": {}
+    },
+    {
+        "label": "ThinkingBlock",
+        "importPath": "llama_index.core.base.llms.types",
+        "description": "llama_index.core.base.llms.types",
+        "isExtraImport": true,
+        "detail": "llama_index.core.base.llms.types",
+        "documentation": {}
+    },
+    {
+        "label": "TextBlock",
+        "importPath": "llama_index.core.base.llms.types",
+        "description": "llama_index.core.base.llms.types",
+        "isExtraImport": true,
+        "detail": "llama_index.core.base.llms.types",
+        "documentation": {}
+    },
+    {
+        "label": "ChatMessage",
+        "importPath": "llama_index.core.llms",
+        "description": "llama_index.core.llms",
+        "isExtraImport": true,
+        "detail": "llama_index.core.llms",
+        "documentation": {}
+    },
+    {
+        "label": "ImageBlock",
+        "importPath": "llama_index.core.llms",
+        "description": "llama_index.core.llms",
+        "isExtraImport": true,
+        "detail": "llama_index.core.llms",
+        "documentation": {}
+    },
+    {
+        "label": "MessageRole",
+        "importPath": "llama_index.core.llms",
+        "description": "llama_index.core.llms",
+        "isExtraImport": true,
+        "detail": "llama_index.core.llms",
+        "documentation": {}
+    },
+    {
+        "label": "ChatMessage",
+        "importPath": "llama_index.core.llms",
+        "description": "llama_index.core.llms",
+        "isExtraImport": true,
+        "detail": "llama_index.core.llms",
+        "documentation": {}
+    },
+    {
+        "label": "ImageBlock",
+        "importPath": "llama_index.core.llms",
+        "description": "llama_index.core.llms",
+        "isExtraImport": true,
+        "detail": "llama_index.core.llms",
+        "documentation": {}
+    },
+    {
+        "label": "MessageRole",
+        "importPath": "llama_index.core.llms",
+        "description": "llama_index.core.llms",
+        "isExtraImport": true,
+        "detail": "llama_index.core.llms",
+        "documentation": {}
+    },
+    {
+        "label": "ChatMessage",
+        "importPath": "llama_index.core.llms",
+        "description": "llama_index.core.llms",
+        "isExtraImport": true,
+        "detail": "llama_index.core.llms",
+        "documentation": {}
+    },
+    {
+        "label": "ImageBlock",
+        "importPath": "llama_index.core.llms",
+        "description": "llama_index.core.llms",
+        "isExtraImport": true,
+        "detail": "llama_index.core.llms",
+        "documentation": {}
+    },
+    {
+        "label": "MessageRole",
+        "importPath": "llama_index.core.llms",
+        "description": "llama_index.core.llms",
+        "isExtraImport": true,
+        "detail": "llama_index.core.llms",
+        "documentation": {}
+    },
+    {
+        "label": "Image",
+        "importPath": "PIL",
+        "description": "PIL",
+        "isExtraImport": true,
+        "detail": "PIL",
+        "documentation": {}
+    },
+    {
+        "label": "ImageDraw",
+        "importPath": "PIL",
+        "description": "PIL",
+        "isExtraImport": true,
+        "detail": "PIL",
+        "documentation": {}
+    },
+    {
+        "label": "Image",
+        "importPath": "PIL",
+        "description": "PIL",
+        "isExtraImport": true,
+        "detail": "PIL",
+        "documentation": {}
+    },
+    {
+        "label": "ImageDraw",
+        "importPath": "PIL",
+        "description": "PIL",
+        "isExtraImport": true,
+        "detail": "PIL",
+        "documentation": {}
+    },
+    {
+        "label": "Image",
+        "importPath": "PIL",
+        "description": "PIL",
+        "isExtraImport": true,
+        "detail": "PIL",
+        "documentation": {}
+    },
+    {
+        "label": "ImageDraw",
+        "importPath": "PIL",
+        "description": "PIL",
+        "isExtraImport": true,
+        "detail": "PIL",
+        "documentation": {}
+    },
+    {
+        "label": "ImageFont",
+        "importPath": "PIL",
+        "description": "PIL",
+        "isExtraImport": true,
+        "detail": "PIL",
+        "documentation": {}
+    },
+    {
+        "label": "random",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "random",
+        "description": "random",
+        "detail": "random",
+        "documentation": {}
+    },
+    {
+        "label": "pytweening",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "pytweening",
+        "description": "pytweening",
+        "detail": "pytweening",
+        "documentation": {}
+    },
+    {
+        "label": "pygetwindow",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "pygetwindow",
+        "description": "pygetwindow",
+        "detail": "pygetwindow",
+        "documentation": {}
+    },
+    {
+        "label": "FunctionTool",
+        "importPath": "llama_index.core.tools",
+        "description": "llama_index.core.tools",
+        "isExtraImport": true,
+        "detail": "llama_index.core.tools",
+        "documentation": {}
+    },
+    {
+        "label": "SelfCorrectingVisionAgent",
+        "importPath": "agent.self_correcting_vision_agent",
+        "description": "agent.self_correcting_vision_agent",
+        "isExtraImport": true,
+        "detail": "agent.self_correcting_vision_agent",
+        "documentation": {}
+    },
+    {
+        "label": "ALLOWED_HOTKEYS",
+        "importPath": "constants.allowed_hotkeys",
+        "description": "constants.allowed_hotkeys",
+        "isExtraImport": true,
+        "detail": "constants.allowed_hotkeys",
+        "documentation": {}
+    },
+    {
+        "label": "subprocess",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "subprocess",
+        "description": "subprocess",
+        "detail": "subprocess",
+        "documentation": {}
+    },
+    {
+        "label": "StealthTerminal",
+        "importPath": "cmdln",
+        "description": "cmdln",
+        "isExtraImport": true,
+        "detail": "cmdln",
+        "documentation": {}
+    },
+    {
+        "label": "sys",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "sys",
+        "description": "sys",
+        "detail": "sys",
+        "documentation": {}
+    },
+    {
+        "label": "traceback",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "traceback",
+        "description": "traceback",
+        "detail": "traceback",
+        "documentation": {}
+    },
+    {
+        "label": "MasterAgent",
+        "kind": 6,
+        "importPath": "agent.master_agent",
+        "description": "agent.master_agent",
+        "peekOfCode": "class MasterAgent:\n    \"\"\"\n    The Master ReAct Agent that orchestrates the execution of tasks.\n    It uses a text-based LLM to reason and calls tools (including the Vision Agent) to interact.\n    \"\"\"\n    def __init__(self, model_name: str = \"qwen3-vl:4b-instruct\"):\n        # Or if we want to stick to qwen, we can use a qwen text model.\n        # Let's parameterize it. You can change this to your preferred local model.\n        self.llm = Settings.llm\n        memory = Memory.from_defaults(session_id=\"my_session\", token_limit=4096)",
+        "detail": "agent.master_agent",
+        "documentation": {}
+    },
+    {
+        "label": "SYS_PROMPT",
+        "kind": 5,
+        "importPath": "agent.master_agent",
+        "description": "agent.master_agent",
+        "peekOfCode": "SYS_PROMPT = f\"\"\"\nYou are a helpful Robotic Process Automation Agent. Your goal is to interpret user instructions, interact with the GUI, and execute the necessary steps to complete tasks.\n### Core Operational Principles\n* **Environment:** You are operating on {platform.system()}.\n* **Methodology:** You must follow the **ReAct** (Reason + Act) pattern to solve tasks.\n* **Planning:** You must plan the steps before starting execution. You must draft an step by step plan of the flow, the tools that would potentially need to be called in each step and the expected output of each tool in step.\n* **Vision-First Approach:** Some tools are powered by a vision agent. Always use the `analyze_screen` tool to verify the state of the GUI before and after taking actions.\n* **State Verification:** Never assume an action succeeded. Always call `analyze_screen` after a mouse or keyboard event to confirm the state change and determine the next logical step.\n### Interaction Workflow\n1. **Analyze:** Call `analyze_screen` to understand the current environment and identify targets (e.g., icons, buttons).",
+        "detail": "agent.master_agent",
+        "documentation": {}
+    },
+    {
+        "label": "env_path",
+        "kind": 5,
+        "importPath": "agent.model",
+        "description": "agent.model",
+        "peekOfCode": "env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '.env')\nload_dotenv(dotenv_path=env_path)\nPROVIDER = (os.getenv(\"MODEL_PROVIDER\") or \"ollama\").strip().lower()\nMODEL_NAME = os.getenv(\"MODEL_NAME\") or \"qwen3-vl:8b-instruct\"\nOLLAMA_BASE_URL = os.getenv(\"OLLAMA_BASE_URL\") or \"http://localhost:11434\"\nOPENAI_API_KEY = os.getenv(\"OPENAI_API_KEY\") or \"\"\nOPENAI_BASE_URL = os.getenv(\"OPENAI_BASE_URL\") or \"https://openrouter.ai/api/v1\"\nOPENROUTER_API_KEY = os.getenv(\"OPENROUTER_API_KEY\") or \"\"\nCONTEXT_WINDOW = int(os.getenv(\"CONTEXT_WINDOW\") or \"8192\")\nREQUEST_TIMEOUT = float(os.getenv(\"REQUEST_TIMEOUT\") or \"120.0\")",
+        "detail": "agent.model",
+        "documentation": {}
+    },
+    {
+        "label": "PROVIDER",
+        "kind": 5,
+        "importPath": "agent.model",
+        "description": "agent.model",
+        "peekOfCode": "PROVIDER = (os.getenv(\"MODEL_PROVIDER\") or \"ollama\").strip().lower()\nMODEL_NAME = os.getenv(\"MODEL_NAME\") or \"qwen3-vl:8b-instruct\"\nOLLAMA_BASE_URL = os.getenv(\"OLLAMA_BASE_URL\") or \"http://localhost:11434\"\nOPENAI_API_KEY = os.getenv(\"OPENAI_API_KEY\") or \"\"\nOPENAI_BASE_URL = os.getenv(\"OPENAI_BASE_URL\") or \"https://openrouter.ai/api/v1\"\nOPENROUTER_API_KEY = os.getenv(\"OPENROUTER_API_KEY\") or \"\"\nCONTEXT_WINDOW = int(os.getenv(\"CONTEXT_WINDOW\") or \"8192\")\nREQUEST_TIMEOUT = float(os.getenv(\"REQUEST_TIMEOUT\") or \"120.0\")\nMAX_TOKENS = int(os.getenv(\"MAX_TOKENS\") or \"4096\")\nif PROVIDER == \"openrouter\":",
+        "detail": "agent.model",
+        "documentation": {}
+    },
+    {
+        "label": "MODEL_NAME",
+        "kind": 5,
+        "importPath": "agent.model",
+        "description": "agent.model",
+        "peekOfCode": "MODEL_NAME = os.getenv(\"MODEL_NAME\") or \"qwen3-vl:8b-instruct\"\nOLLAMA_BASE_URL = os.getenv(\"OLLAMA_BASE_URL\") or \"http://localhost:11434\"\nOPENAI_API_KEY = os.getenv(\"OPENAI_API_KEY\") or \"\"\nOPENAI_BASE_URL = os.getenv(\"OPENAI_BASE_URL\") or \"https://openrouter.ai/api/v1\"\nOPENROUTER_API_KEY = os.getenv(\"OPENROUTER_API_KEY\") or \"\"\nCONTEXT_WINDOW = int(os.getenv(\"CONTEXT_WINDOW\") or \"8192\")\nREQUEST_TIMEOUT = float(os.getenv(\"REQUEST_TIMEOUT\") or \"120.0\")\nMAX_TOKENS = int(os.getenv(\"MAX_TOKENS\") or \"4096\")\nif PROVIDER == \"openrouter\":\n    from llama_index.llms.openrouter import OpenRouter",
+        "detail": "agent.model",
+        "documentation": {}
+    },
+    {
+        "label": "OLLAMA_BASE_URL",
+        "kind": 5,
+        "importPath": "agent.model",
+        "description": "agent.model",
+        "peekOfCode": "OLLAMA_BASE_URL = os.getenv(\"OLLAMA_BASE_URL\") or \"http://localhost:11434\"\nOPENAI_API_KEY = os.getenv(\"OPENAI_API_KEY\") or \"\"\nOPENAI_BASE_URL = os.getenv(\"OPENAI_BASE_URL\") or \"https://openrouter.ai/api/v1\"\nOPENROUTER_API_KEY = os.getenv(\"OPENROUTER_API_KEY\") or \"\"\nCONTEXT_WINDOW = int(os.getenv(\"CONTEXT_WINDOW\") or \"8192\")\nREQUEST_TIMEOUT = float(os.getenv(\"REQUEST_TIMEOUT\") or \"120.0\")\nMAX_TOKENS = int(os.getenv(\"MAX_TOKENS\") or \"4096\")\nif PROVIDER == \"openrouter\":\n    from llama_index.llms.openrouter import OpenRouter\n    Settings.llm = OpenRouter(",
+        "detail": "agent.model",
+        "documentation": {}
+    },
+    {
+        "label": "OPENAI_API_KEY",
+        "kind": 5,
+        "importPath": "agent.model",
+        "description": "agent.model",
+        "peekOfCode": "OPENAI_API_KEY = os.getenv(\"OPENAI_API_KEY\") or \"\"\nOPENAI_BASE_URL = os.getenv(\"OPENAI_BASE_URL\") or \"https://openrouter.ai/api/v1\"\nOPENROUTER_API_KEY = os.getenv(\"OPENROUTER_API_KEY\") or \"\"\nCONTEXT_WINDOW = int(os.getenv(\"CONTEXT_WINDOW\") or \"8192\")\nREQUEST_TIMEOUT = float(os.getenv(\"REQUEST_TIMEOUT\") or \"120.0\")\nMAX_TOKENS = int(os.getenv(\"MAX_TOKENS\") or \"4096\")\nif PROVIDER == \"openrouter\":\n    from llama_index.llms.openrouter import OpenRouter\n    Settings.llm = OpenRouter(\n        model=MODEL_NAME,",
+        "detail": "agent.model",
+        "documentation": {}
+    },
+    {
+        "label": "OPENAI_BASE_URL",
+        "kind": 5,
+        "importPath": "agent.model",
+        "description": "agent.model",
+        "peekOfCode": "OPENAI_BASE_URL = os.getenv(\"OPENAI_BASE_URL\") or \"https://openrouter.ai/api/v1\"\nOPENROUTER_API_KEY = os.getenv(\"OPENROUTER_API_KEY\") or \"\"\nCONTEXT_WINDOW = int(os.getenv(\"CONTEXT_WINDOW\") or \"8192\")\nREQUEST_TIMEOUT = float(os.getenv(\"REQUEST_TIMEOUT\") or \"120.0\")\nMAX_TOKENS = int(os.getenv(\"MAX_TOKENS\") or \"4096\")\nif PROVIDER == \"openrouter\":\n    from llama_index.llms.openrouter import OpenRouter\n    Settings.llm = OpenRouter(\n        model=MODEL_NAME,\n        api_key=OPENROUTER_API_KEY or OPENAI_API_KEY,",
+        "detail": "agent.model",
+        "documentation": {}
+    },
+    {
+        "label": "OPENROUTER_API_KEY",
+        "kind": 5,
+        "importPath": "agent.model",
+        "description": "agent.model",
+        "peekOfCode": "OPENROUTER_API_KEY = os.getenv(\"OPENROUTER_API_KEY\") or \"\"\nCONTEXT_WINDOW = int(os.getenv(\"CONTEXT_WINDOW\") or \"8192\")\nREQUEST_TIMEOUT = float(os.getenv(\"REQUEST_TIMEOUT\") or \"120.0\")\nMAX_TOKENS = int(os.getenv(\"MAX_TOKENS\") or \"4096\")\nif PROVIDER == \"openrouter\":\n    from llama_index.llms.openrouter import OpenRouter\n    Settings.llm = OpenRouter(\n        model=MODEL_NAME,\n        api_key=OPENROUTER_API_KEY or OPENAI_API_KEY,\n        api_base=OPENAI_BASE_URL,",
+        "detail": "agent.model",
+        "documentation": {}
+    },
+    {
+        "label": "CONTEXT_WINDOW",
+        "kind": 5,
+        "importPath": "agent.model",
+        "description": "agent.model",
+        "peekOfCode": "CONTEXT_WINDOW = int(os.getenv(\"CONTEXT_WINDOW\") or \"8192\")\nREQUEST_TIMEOUT = float(os.getenv(\"REQUEST_TIMEOUT\") or \"120.0\")\nMAX_TOKENS = int(os.getenv(\"MAX_TOKENS\") or \"4096\")\nif PROVIDER == \"openrouter\":\n    from llama_index.llms.openrouter import OpenRouter\n    Settings.llm = OpenRouter(\n        model=MODEL_NAME,\n        api_key=OPENROUTER_API_KEY or OPENAI_API_KEY,\n        api_base=OPENAI_BASE_URL,\n        max_tokens=MAX_TOKENS,",
+        "detail": "agent.model",
+        "documentation": {}
+    },
+    {
+        "label": "REQUEST_TIMEOUT",
+        "kind": 5,
+        "importPath": "agent.model",
+        "description": "agent.model",
+        "peekOfCode": "REQUEST_TIMEOUT = float(os.getenv(\"REQUEST_TIMEOUT\") or \"120.0\")\nMAX_TOKENS = int(os.getenv(\"MAX_TOKENS\") or \"4096\")\nif PROVIDER == \"openrouter\":\n    from llama_index.llms.openrouter import OpenRouter\n    Settings.llm = OpenRouter(\n        model=MODEL_NAME,\n        api_key=OPENROUTER_API_KEY or OPENAI_API_KEY,\n        api_base=OPENAI_BASE_URL,\n        max_tokens=MAX_TOKENS,\n        timeout=REQUEST_TIMEOUT,",
+        "detail": "agent.model",
+        "documentation": {}
+    },
+    {
+        "label": "MAX_TOKENS",
+        "kind": 5,
+        "importPath": "agent.model",
+        "description": "agent.model",
+        "peekOfCode": "MAX_TOKENS = int(os.getenv(\"MAX_TOKENS\") or \"4096\")\nif PROVIDER == \"openrouter\":\n    from llama_index.llms.openrouter import OpenRouter\n    Settings.llm = OpenRouter(\n        model=MODEL_NAME,\n        api_key=OPENROUTER_API_KEY or OPENAI_API_KEY,\n        api_base=OPENAI_BASE_URL,\n        max_tokens=MAX_TOKENS,\n        timeout=REQUEST_TIMEOUT,\n        context_window=CONTEXT_WINDOW,",
+        "detail": "agent.model",
+        "documentation": {}
+    },
+    {
+        "label": "LocateResult",
+        "kind": 6,
+        "importPath": "agent.self_correcting_vision_agent",
+        "description": "agent.self_correcting_vision_agent",
+        "peekOfCode": "class LocateResult:\n    \"\"\"Final result of element localization.\"\"\"\n    target: str\n    x: int # Native Screen X\n    y: int # Native Screen Y\n    confidence: str\n    iterations: int\n    screen_width: int\n    screen_height: int\nclass SelfCorrectingVisionAgent:",
+        "detail": "agent.self_correcting_vision_agent",
+        "documentation": {}
+    },
+    {
+        "label": "SelfCorrectingVisionAgent",
+        "kind": 6,
+        "importPath": "agent.self_correcting_vision_agent",
+        "description": "agent.self_correcting_vision_agent",
+        "peekOfCode": "class SelfCorrectingVisionAgent:\n    def __init__(\n        self,\n        model_name: str = \"qwen3-vl:4b-instruct\",\n        context_window: int = 8192,\n        request_timeout: float = 300.0,\n        max_image_size: int = 1280,\n        verbose: bool = True,\n    ):\n        self.model_name = model_name",
+        "detail": "agent.self_correcting_vision_agent",
+        "documentation": {}
+    },
+    {
+        "label": "pyautogui.FAILSAFE",
+        "kind": 5,
+        "importPath": "agent.self_correcting_vision_agent",
+        "description": "agent.self_correcting_vision_agent",
+        "peekOfCode": "pyautogui.FAILSAFE = False \n@dataclass\nclass LocateResult:\n    \"\"\"Final result of element localization.\"\"\"\n    target: str\n    x: int # Native Screen X\n    y: int # Native Screen Y\n    confidence: str\n    iterations: int\n    screen_width: int",
+        "detail": "agent.self_correcting_vision_agent",
+        "documentation": {}
+    },
+    {
+        "label": "LocateResult",
+        "kind": 6,
+        "importPath": "agent.self_correcting_vision_agent_2",
+        "description": "agent.self_correcting_vision_agent_2",
+        "peekOfCode": "class LocateResult:\n    \"\"\"Final result of element localization.\"\"\"\n    target: str\n    x: int # Native Screen X\n    y: int # Native Screen Y\n    confidence: str\n    iterations: int\n    screen_width: int\n    screen_height: int\nclass SelfCorrectingVisionAgent:",
+        "detail": "agent.self_correcting_vision_agent_2",
+        "documentation": {}
+    },
+    {
+        "label": "SelfCorrectingVisionAgent",
+        "kind": 6,
+        "importPath": "agent.self_correcting_vision_agent_2",
+        "description": "agent.self_correcting_vision_agent_2",
+        "peekOfCode": "class SelfCorrectingVisionAgent:\n    def __init__(\n        self,\n        model_name: str = \"qwen3-vl:4b-instruct\",\n        context_window: int = 8192,\n        request_timeout: float = 300.0,\n        max_image_size: int = 1920,\n        verbose: bool = True,\n    ):\n        self.model_name = model_name",
+        "detail": "agent.self_correcting_vision_agent_2",
+        "documentation": {}
+    },
+    {
+        "label": "pyautogui.FAILSAFE",
+        "kind": 5,
+        "importPath": "agent.self_correcting_vision_agent_2",
+        "description": "agent.self_correcting_vision_agent_2",
+        "peekOfCode": "pyautogui.FAILSAFE = False \n@dataclass\nclass LocateResult:\n    \"\"\"Final result of element localization.\"\"\"\n    target: str\n    x: int # Native Screen X\n    y: int # Native Screen Y\n    confidence: str\n    iterations: int\n    screen_width: int",
+        "detail": "agent.self_correcting_vision_agent_2",
+        "documentation": {}
+    },
+    {
+        "label": "LocateResult",
+        "kind": 6,
+        "importPath": "agent.self_correcting_vision_agent_3",
+        "description": "agent.self_correcting_vision_agent_3",
+        "peekOfCode": "class LocateResult:\n    \"\"\"Final result of element localization.\"\"\"\n    target: str\n    x: int  # Native Screen X\n    y: int  # Native Screen Y\n    confidence: str\n    iterations: int\n    screen_width: int\n    screen_height: int\nclass SelfCorrectingVisionAgentV3:",
+        "detail": "agent.self_correcting_vision_agent_3",
+        "documentation": {}
+    },
+    {
+        "label": "SelfCorrectingVisionAgentV3",
+        "kind": 6,
+        "importPath": "agent.self_correcting_vision_agent_3",
+        "description": "agent.self_correcting_vision_agent_3",
+        "peekOfCode": "class SelfCorrectingVisionAgentV3:\n    def __init__(\n        self,\n        model_name: str = \"qwen3-vl:4b-instruct\",\n        context_window: int = 8192,\n        request_timeout: float = 300.0,\n        max_image_size: int = 1280,\n        grid_divisions: int = 5,  # 4 interior lines divide into 5 bands: 200, 400, 600, 800\n        verbose: bool = True,\n        cleanup_screenshots: bool = True,",
+        "detail": "agent.self_correcting_vision_agent_3",
+        "documentation": {}
+    },
+    {
+        "label": "pyautogui.FAILSAFE",
+        "kind": 5,
+        "importPath": "agent.self_correcting_vision_agent_3",
+        "description": "agent.self_correcting_vision_agent_3",
+        "peekOfCode": "pyautogui.FAILSAFE = False\n@dataclass\nclass LocateResult:\n    \"\"\"Final result of element localization.\"\"\"\n    target: str\n    x: int  # Native Screen X\n    y: int  # Native Screen Y\n    confidence: str\n    iterations: int\n    screen_width: int",
+        "detail": "agent.self_correcting_vision_agent_3",
+        "documentation": {}
+    },
+    {
+        "label": "analyze_screen",
+        "kind": 2,
+        "importPath": "agent.tools",
+        "description": "agent.tools",
+        "peekOfCode": "def analyze_screen(prompt: str) -> str:\n    \"\"\"\n    Takes a screenshot of the current desktop and asks the Vision Agent to analyze it based on the prompt.\n    Use this tool to get context of the current screen state to help you understand and build towards next actions.\n    In prompt, ask the vision agent directly what you want it to describe such as open windows, apps, browser tabs etc, that will help you figure out next steps.\n    Do not bother with explaining, be direct in the prompt.\n    \"\"\"\n    import traceback\n    print(f\"DEBUG: Tool called with prompt: {prompt}\")\n    terminal_pos = None",
+        "detail": "agent.tools",
+        "documentation": {}
+    },
+    {
+        "label": "move_mouse",
+        "kind": 2,
+        "importPath": "agent.tools",
+        "description": "agent.tools",
+        "peekOfCode": "def move_mouse(prompt: str) -> str:\n    \"\"\"\n    Takes the targetted GUI element on screen in prompt and gives it to the vision agent to move mouse cursor to it's postion.\n    The vision agent will try to move the mouse to the desired GUI object / element so make sure to describe precisely and concisely the target.\n    For example, if you wish to move the mouse to a form field, say: \"form field with label username\".\n    If the vision agent is successful, it will output a json object structure that looks like:\n    {\"target\": \"<target>\", \"x\": <x>, \"y\": <y>, \"confidence\": \"<confidence>\", \"iterations\": <iterations>}\n    Do not bother with explaining, be direct in the prompt. Only identify the target with a description if needed. Do not use filler words.\n    If the confidence in response is low, you must call this tool with a better prompt\n    \"\"\"",
+        "detail": "agent.tools",
+        "documentation": {}
+    },
+    {
+        "label": "left_click",
+        "kind": 2,
+        "importPath": "agent.tools",
+        "description": "agent.tools",
+        "peekOfCode": "def left_click() -> str:\n    \"\"\"\n    Performs a single left mouse click at the current cursor position.\n    \"\"\"\n    try:\n        pyautogui.click()\n        return \"Left clicked.\"\n    except Exception as e:\n        return f\"Failed to left click: {str(e)}\"\ndef right_click() -> str:",
+        "detail": "agent.tools",
+        "documentation": {}
+    },
+    {
+        "label": "right_click",
+        "kind": 2,
+        "importPath": "agent.tools",
+        "description": "agent.tools",
+        "peekOfCode": "def right_click() -> str:\n    \"\"\"\n    Performs a single right mouse click at the current cursor position.\n    \"\"\"\n    try:\n        pyautogui.rightClick()\n        return \"Right clicked.\"\n    except Exception as e:\n        return f\"Failed to right click: {str(e)}\"\ndef double_click() -> str:",
+        "detail": "agent.tools",
+        "documentation": {}
+    },
+    {
+        "label": "double_click",
+        "kind": 2,
+        "importPath": "agent.tools",
+        "description": "agent.tools",
+        "peekOfCode": "def double_click() -> str:\n    \"\"\"\n    Performs a double left mouse click at the current cursor position.\n    \"\"\"\n    try:\n        pyautogui.doubleClick()\n        return \"Double clicked.\"\n    except Exception as e:\n        return f\"Failed to double click: {str(e)}\"\ndef type_text(text: str) -> str:",
+        "detail": "agent.tools",
+        "documentation": {}
+    },
+    {
+        "label": "type_text",
+        "kind": 2,
+        "importPath": "agent.tools",
+        "description": "agent.tools",
+        "peekOfCode": "def type_text(text: str) -> str:\n    \"\"\"\n    Types the specified text string using the keyboard. Humanness added\n    \"\"\"\n    try:\n        for char in text:\n            # Base interval + random variance\n            # This creates a range of 0.05 to 0.15 seconds per character\n            delay = random.uniform(0.05, 0.15)\n            # Occasionally simulate a \"burst\" of speed or a \"hesitation\"",
+        "detail": "agent.tools",
+        "documentation": {}
+    },
+    {
+        "label": "press_key",
+        "kind": 2,
+        "importPath": "agent.tools",
+        "description": "agent.tools",
+        "peekOfCode": "def press_key(key: str) -> str:\n    \"\"\"\n    Presses a specific keyboard key (e.g., 'enter', 'tab', 'esc', 'win').\n    \"\"\"\n    try:\n        pyautogui.press(key)\n        return f\"Pressed key: '{key}'\"\n    except Exception as e:\n        return f\"Failed to press key: {str(e)}\"\ndef execute_hotkey(keys: List[str]) -> str:",
+        "detail": "agent.tools",
+        "documentation": {}
+    },
+    {
+        "label": "execute_hotkey",
+        "kind": 2,
+        "importPath": "agent.tools",
+        "description": "agent.tools",
+        "peekOfCode": "def execute_hotkey(keys: List[str]) -> str:\n    \"\"\"\n    Executes a keyboard hotkey by combining the provided keys.\n    Args:\n        keys: A list of keys to press simultaneously. \n              Examples: [\"ctrl\", \"c\"], [\"alt\", \"tab\"], [\"f5\"]\n    Returns:\n        A message confirming the hotkey execution or an error.\n    \"\"\"\n    # Validate input",
+        "detail": "agent.tools",
+        "documentation": {}
+    },
+    {
+        "label": "TERMINAL_TITLE",
+        "kind": 5,
+        "importPath": "agent.tools",
+        "description": "agent.tools",
+        "peekOfCode": "TERMINAL_TITLE = \"MyHiddenTerminal\"\ndef _hide_terminal():\n    \"\"\"Find and hide the stealth terminal by title. Returns original position or None.\"\"\"\n    windows = gw.getWindowsWithTitle(TERMINAL_TITLE)\n    if windows:\n        win = windows[0]\n        try:\n            pos = (win.left, win.top)\n            win.moveTo(-2000, -2000)\n            return pos",
+        "detail": "agent.tools",
+        "documentation": {}
+    },
+    {
+        "label": "vision_agent",
+        "kind": 5,
+        "importPath": "agent.tools",
+        "description": "agent.tools",
+        "peekOfCode": "vision_agent = SelfCorrectingVisionAgent()\ndef analyze_screen(prompt: str) -> str:\n    \"\"\"\n    Takes a screenshot of the current desktop and asks the Vision Agent to analyze it based on the prompt.\n    Use this tool to get context of the current screen state to help you understand and build towards next actions.\n    In prompt, ask the vision agent directly what you want it to describe such as open windows, apps, browser tabs etc, that will help you figure out next steps.\n    Do not bother with explaining, be direct in the prompt.\n    \"\"\"\n    import traceback\n    print(f\"DEBUG: Tool called with prompt: {prompt}\")",
+        "detail": "agent.tools",
+        "documentation": {}
+    },
+    {
+        "label": "agent_tools",
+        "kind": 5,
+        "importPath": "agent.tools",
+        "description": "agent.tools",
+        "peekOfCode": "agent_tools = [\n    FunctionTool.from_defaults(fn=analyze_screen),\n    FunctionTool.from_defaults(fn=move_mouse),\n    FunctionTool.from_defaults(fn=left_click),\n    FunctionTool.from_defaults(fn=right_click),\n    FunctionTool.from_defaults(fn=double_click, async_callback=delay_callback),\n    FunctionTool.from_defaults(fn=type_text),\n    FunctionTool.from_defaults(fn=press_key, async_callback=delay_callback),\n    FunctionTool.from_defaults(fn=execute_hotkey, async_callback=delay_callback)\n]",
+        "detail": "agent.tools",
+        "documentation": {}
+    },
+    {
+        "label": "ALLOWED_HOTKEYS",
+        "kind": 5,
+        "importPath": "constants.allowed_hotkeys",
+        "description": "constants.allowed_hotkeys",
+        "peekOfCode": "ALLOWED_HOTKEYS = [\n    # ============ CLIPBOARD OPERATIONS ============\n    [\"ctrl\", \"c\"],      # Copy\n    [\"ctrl\", \"x\"],      # Cut\n    [\"ctrl\", \"v\"],      # Paste\n    # ============ TEXT EDITING ============\n    [\"ctrl\", \"a\"],      # Select All\n    [\"ctrl\", \"z\"],      # Undo\n    [\"ctrl\", \"y\"],      # Redo\n    [\"ctrl\", \"shift\", \"z\"],  # Redo (alternative)",
+        "detail": "constants.allowed_hotkeys",
+        "documentation": {}
+    },
+    {
+        "label": "StealthTerminal",
+        "kind": 6,
+        "importPath": "cmdln",
+        "description": "cmdln",
+        "peekOfCode": "class StealthTerminal:\n    _instances = []\n    def __init__(self, title=\"MyHiddenTerminal\"):\n        self.title = title\n        self.window = None\n        self._hidden = False\n        self._original_pos = None\n    def spawn(self, command=None):\n        \"\"\"Spawns a new terminal window with correct title parsing.\"\"\"\n        if command:",
+        "detail": "cmdln",
+        "documentation": {}
+    },
+    {
+        "label": "filepath",
+        "kind": 5,
+        "importPath": "fix_duplicate",
+        "description": "fix_duplicate",
+        "peekOfCode": "filepath = r'C:\\Users\\pc\\Desktop\\lemme-do-it-for-you\\agent\\self_correcting_vision_agent_3.py'\nwith open(filepath, 'r') as f:\n    content = f.read()\nold_func_start = '    def _get_reestimate_prompt(self, target: str, nx: int, ny: int) -> str:'\nold_marker = '    def _get_cropped_verification_path'\nstart_idx = content.find(old_func_start)\nif start_idx >= 0:\n    end_idx = content.find(old_marker, start_idx + 10)\n    if end_idx >= 0:\n        new_content = content[:start_idx] + content[end_idx:]",
+        "detail": "fix_duplicate",
+        "documentation": {}
+    },
+    {
+        "label": "old_func_start",
+        "kind": 5,
+        "importPath": "fix_duplicate",
+        "description": "fix_duplicate",
+        "peekOfCode": "old_func_start = '    def _get_reestimate_prompt(self, target: str, nx: int, ny: int) -> str:'\nold_marker = '    def _get_cropped_verification_path'\nstart_idx = content.find(old_func_start)\nif start_idx >= 0:\n    end_idx = content.find(old_marker, start_idx + 10)\n    if end_idx >= 0:\n        new_content = content[:start_idx] + content[end_idx:]\n        with open(filepath, 'w') as f:\n            f.write(new_content)\n        print(f'Removed old function from char {start_idx} to {end_idx}')",
+        "detail": "fix_duplicate",
+        "documentation": {}
+    },
+    {
+        "label": "old_marker",
+        "kind": 5,
+        "importPath": "fix_duplicate",
+        "description": "fix_duplicate",
+        "peekOfCode": "old_marker = '    def _get_cropped_verification_path'\nstart_idx = content.find(old_func_start)\nif start_idx >= 0:\n    end_idx = content.find(old_marker, start_idx + 10)\n    if end_idx >= 0:\n        new_content = content[:start_idx] + content[end_idx:]\n        with open(filepath, 'w') as f:\n            f.write(new_content)\n        print(f'Removed old function from char {start_idx} to {end_idx}')\n    else:",
+        "detail": "fix_duplicate",
+        "documentation": {}
+    },
+    {
+        "label": "start_idx",
+        "kind": 5,
+        "importPath": "fix_duplicate",
+        "description": "fix_duplicate",
+        "peekOfCode": "start_idx = content.find(old_func_start)\nif start_idx >= 0:\n    end_idx = content.find(old_marker, start_idx + 10)\n    if end_idx >= 0:\n        new_content = content[:start_idx] + content[end_idx:]\n        with open(filepath, 'w') as f:\n            f.write(new_content)\n        print(f'Removed old function from char {start_idx} to {end_idx}')\n    else:\n        print('End marker not found')",
+        "detail": "fix_duplicate",
+        "documentation": {}
+    },
+    {
+        "label": "main",
+        "kind": 2,
+        "importPath": "main",
+        "description": "main",
+        "peekOfCode": "def main():\n    stealth = StealthTerminal(\"MyHiddenTerminal\")\n    stealth.spawn(\"python -m agent.master_agent\")\n    print(\"Agent launched in hidden terminal. Press Ctrl+C to stop.\")\nif __name__ == \"__main__\":\n    main()",
+        "detail": "main",
+        "documentation": {}
+    },
+    {
+        "label": "test_vision_agent",
+        "kind": 2,
+        "importPath": "test_vision_agent",
+        "description": "test_vision_agent",
+        "peekOfCode": "def test_vision_agent():\n    print(\"=\" * 60)\n    print(\"VISION AGENT DIAGNOSTIC TEST\")\n    print(\"=\" * 60)\n    # Test 1: Check environment variables\n    print(\"\\n[1] Checking environment variables...\")\n    from dotenv import load_dotenv\n    load_dotenv()\n    provider = os.getenv(\"MODEL_PROVIDER\", \"ollama\")\n    model_name = os.getenv(\"MODEL_NAME\", \"qwen3-vl:8b-instruct\")",
+        "detail": "test_vision_agent",
+        "documentation": {}
+    }
+]

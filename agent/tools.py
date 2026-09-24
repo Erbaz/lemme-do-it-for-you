@@ -2,10 +2,39 @@ import random
 import time
 import asyncio
 import pyautogui
+import pygetwindow as gw
 from llama_index.core.tools import FunctionTool
 from agent.self_correcting_vision_agent import SelfCorrectingVisionAgent
 from constants.allowed_hotkeys import ALLOWED_HOTKEYS
 from typing import List
+
+TERMINAL_TITLE = "MyHiddenTerminal"
+
+
+def _hide_terminal():
+    """Find and hide the stealth terminal by title. Returns original position or None."""
+    windows = gw.getWindowsWithTitle(TERMINAL_TITLE)
+    if windows:
+        win = windows[0]
+        try:
+            pos = (win.left, win.top)
+            win.moveTo(-2000, -2000)
+            return pos
+        except Exception:
+            return None
+    return None
+
+
+def _show_terminal(pos):
+    """Restore the stealth terminal to its original position."""
+    if not pos:
+        return
+    windows = gw.getWindowsWithTitle(TERMINAL_TITLE)
+    if windows:
+        try:
+            windows[0].moveTo(*pos)
+        except Exception:
+            pass
 
 
 # Initialize the vision agent globally or lazily
@@ -18,16 +47,22 @@ def analyze_screen(prompt: str) -> str:
     In prompt, ask the vision agent directly what you want it to describe such as open windows, apps, browser tabs etc, that will help you figure out next steps.
     Do not bother with explaining, be direct in the prompt.
     """
+    import traceback
     print(f"DEBUG: Tool called with prompt: {prompt}")
+    terminal_pos = None
     try:
-        # Analyze using Vision Agent
-        
+        terminal_pos = _hide_terminal()
+        time.sleep(0.3)
         response = vision_agent.analyze_current_screen(prompt)
-        
+        print(f"DEBUG: Vision agent returned: {response[:500] if response else 'None'}")
         return f"Vision Analysis Result:\n{response}"
     except Exception as e:
-        print(f"Failed to analyze screen: {str(e)}")
+        print(f"ERROR: Failed to analyze screen: {type(e).__name__}: {str(e)}")
+        print(f"ERROR: Full traceback:\n{traceback.format_exc()}")
         return f"Failed to analyze screen: {str(e)}"
+    finally:
+        if terminal_pos:
+            _show_terminal(terminal_pos)
 
 
 def move_mouse(prompt: str) -> str:
@@ -40,13 +75,22 @@ def move_mouse(prompt: str) -> str:
     Do not bother with explaining, be direct in the prompt. Only identify the target with a description if needed. Do not use filler words.
     If the confidence in response is low, you must call this tool with a better prompt
     """
-    
+    import traceback
+    print(f"DEBUG: Tool called with prompt: {prompt}")
+    terminal_pos = None
     try:
+        terminal_pos = _hide_terminal()
+        time.sleep(0.3)
         response = vision_agent.locate_element(prompt)
-
+        print(f"DEBUG: Vision agent returned: {response}")
         return f"Vision Agent Result:\n{response}"
     except Exception as e:
+        print(f"ERROR: Failed to move mouse: {type(e).__name__}: {str(e)}")
+        print(f"ERROR: Full traceback:\n{traceback.format_exc()}")
         return f"Failed to move mouse: {str(e)}"
+    finally:
+        if terminal_pos:
+            _show_terminal(terminal_pos)
 
 def left_click() -> str:
     """
@@ -141,8 +185,8 @@ def execute_hotkey(keys: List[str]) -> str:
         return f"Error executing hotkey: {str(e)}"
 
 
-async def delay_callback():
-    await asyncio.sleep(3) 
+async def delay_callback(_tool=None):
+    await asyncio.sleep(3)
     return None
 
 

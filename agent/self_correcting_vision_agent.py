@@ -6,10 +6,11 @@ from dataclasses import dataclass
 from typing import Optional, List, Tuple
 
 import pyautogui
-from llama_index.llms.ollama import Ollama
+import agent.model  # loads model config from .env and sets Settings.llm
 from llama_index.core import Settings
 from llama_index.core.base.llms.types import ChatResponse, TextBlock, ThinkingBlock
 from llama_index.core.llms import ChatMessage, ImageBlock, MessageRole
+from llama_index.llms.ollama import Ollama
 from PIL import Image, ImageDraw
 import random
 import time
@@ -120,20 +121,60 @@ TASK: Is the center of the RED crosshair touching or overlapping the "{target}"?
 Return ONLY JSON: {{"confirmed": true or false}}"""
 
     def _get_offset_prompt(self, target: str, nx: int, ny: int) -> str:
-        return f"""The RED crosshair is at normalized coordinates ({nx}, {ny}). 
-It is NOT on the center of the "{target}".
+        color_names = ["cyan", "magenta"]
+        history_descriptions = []
+        for i, pos in enumerate(self.history[:2]):
+            color = color_names[i] if i < len(color_names) else f"point_{i+1}"
+            history_descriptions.append(f"- {color.upper()} dot was at normalized coordinates ({pos[0]}, {pos[1]})")
 
-Task: Nudge the RED crosshair. How many units (on a 0-1000 scale) must we move it in X and Y to reach the center of the "{target}"? Use previous coordinates marked in image to understand how much to nudge in proportion.
+        history_text = ""
+        if history_descriptions:
+            history_text = "\nPrevious attempts shown on image:\n" + "\n".join(history_descriptions) + "\n"
+
+        return f"""You are looking at a screenshot on a 0 to 1000 coordinate scale.
+The RED crosshair is currently at normalized coordinates ({nx}, {ny}).
+It is NOT on the center of the "{target}".{history_text}
+Task: Nudge the RED crosshair. How many units (on a 0-1000 scale) must we move it in X and Y to reach the exact center of "{target}"?
+Use the known coordinates of the RED crosshair ({nx}, {ny}) and any previous colored dots above to judge the visual distance and scale.
 Return ONLY JSON: {{"offset_x": <int>, "offset_y": <int>}}"""
 
     # ==================== Main Workflow ====================
 
     def _chat(self, image_path: str, prompt: str) -> dict:
         msg = [ChatMessage(role=MessageRole.USER, blocks=[ImageBlock(path=image_path), TextBlock(text=prompt)])]
-        response = self.llm.chat(msg, additional_kwargs={"format": "json", "num_predict": 1024})
-        print(f"response: {response}")
+
+        # Log image details
+        try:
+            img_size = os.path.getsize(image_path)
+            from PIL import Image
+            with Image.open(image_path) as img:
+                img_format = img.format
+                img_mode = img.mode
+            self._log(f"Image: {image_path} | Size: {img_size} bytes | Format: {img_format} | Mode: {img_mode}", "DEBUG")
+        except Exception as e:
+            self._log(f"Could not get image details: {e}", "WARN")
+
+        # Log the prompt
+        self._log(f"Sending prompt to LLM: {prompt[:200]}...", "DEBUG")
+
+        response = self.llm.chat(msg)
+
+        # Log raw response details
+        self._log(f"LLM Response - Raw: {response}", "DEBUG")
+        self._log(f"LLM Response - Message role: {response.message.role}", "DEBUG")
+        self._log(f"LLM Response - Number of blocks: {len(response.message.blocks)}", "DEBUG")
+        for i, block in enumerate(response.message.blocks):
+            block_type = getattr(block, 'block_type', 'unknown')
+            block_text = getattr(block, 'text', getattr(block, 'content', 'N/A'))
+            self._log(f"LLM Response - Block {i}: type={block_type}, text={str(block_text)[:300]}", "DEBUG")
+
         content = "".join([b.text if hasattr(b, 'text') else b.content for b in response.message.blocks])
+        self._log(f"LLM Response - Combined content: {content}", "DEBUG")
+
         match = re.search(r"\{[\s\S]*\}", content)
+        if not match:
+            self._log(f"ERROR: No JSON found in response! Content: {content}", "ERROR")
+            raise ValueError(f"No JSON found in LLM response: {content}")
         return json.loads(match.group(0))
     
     
@@ -218,28 +259,59 @@ Return ONLY JSON: {{"offset_x": <int>, "offset_y": <int>}}"""
         finally:
             self._clear_screenshots()
 
-    def analyze_current_screen(self, prompt:str | None) -> str:
+    def analyze_current_screen(self, prompt:str | None, screenshot_path: str | None = None) -> str:
         self._log(f"prompt from master agent: {prompt}")
-        path = "current_screen.png"
-        self._capture_screenshot_with_scaling(path)
+        path = screenshot_path or "current_screen.png"
+        if not screenshot_path:
+            self._capture_screenshot_with_scaling(path)
+
+        # Log image details
+        try:
+            img_size = os.path.getsize(path)
+            from PIL import Image
+            with Image.open(path) as img:
+                img_format = img.format
+                img_mode = img.mode
+                img_size_px = img.size
+            self._log(f"Screenshot: {path} | Size: {img_size} bytes | Format: {img_format} | Mode: {img_mode} | Dimensions: {img_size_px}", "INFO")
+        except Exception as e:
+            self._log(f"Could not get image details: {e}", "WARN")
+
         prompt = f"""
         Analyze the current screen and describe precisely in a bulleted list.
         You must tell me what window is open, what icons are available, what buttons are shown and / or disabled, what page is open if what you see is a website. What tabs are possibly open and what other UI elements are going to help me take the next step of navigating.
         """ if not prompt else prompt
+
+        self._log(f"Final prompt to LLM: {prompt[:300]}...", "DEBUG")
         msg = [ChatMessage(role=MessageRole.USER, blocks=[ImageBlock(path=path), TextBlock(text=prompt)])]
-        response = self.llm.chat(msg, additional_kwargs={"num_predict": 1024})
-        self._log(f"response: {response}")
-        content = "".join([b.text if hasattr(b, 'text') else b.content for b in response.message.blocks])
+        self._log(f"Message blocks: {len(msg[0].blocks)} blocks (Image + Text)", "DEBUG")
+
+        response = self.llm.chat(msg)
+
+        # Log raw response details
+        self._log(f"LLM Response - Raw object: {response}", "DEBUG")
+        self._log(f"LLM Response - Message role: {response.message.role}", "INFO")
+        self._log(f"LLM Response - Number of blocks: {len(response.message.blocks)}", "INFO")
+        for i, block in enumerate(response.message.blocks):
+            block_type = getattr(block, 'block_type', 'unknown')
+            block_text = getattr(block, 'text', getattr(block, 'content', 'N/A'))
+            self._log(f"LLM Response - Block {i}: type={block_type}, text={str(block_text)[:500]}", "INFO")
+
+        content = "".join([b.text if hasattr(b, 'text') else str(b.content) for b in response.message.blocks])
+        if not content and response.message.content:
+            content = str(response.message.content)
+        self._log(f"LLM Response - Combined content: {content}", "INFO")
         self._clear_screenshots()
         return content
         
 
 if __name__ == "__main__":
-    Settings.llm = Ollama(model="qwen3-vl:4b-instruct", request_timeout=120.0, context_window=8192)
     agent = SelfCorrectingVisionAgent()
     if(input("Do you want to analyze the current screen? (y/n): ") == "y"):
-        analysis = agent.analyze_current_screen()
+        prompt = input("Enter a prompt for the vision agent: ")
+        analysis = agent.analyze_current_screen(prompt=prompt)
         print(f"\nANALYSIS: {analysis}")
     else:
-        res = agent.locate_element(target="the docker app")
+        prompt = input("Enter a target to locate on the screen: ")
+        res = agent.locate_element(target=prompt)
         print(f"\nRESULT: ({res.x}, {res.y})")

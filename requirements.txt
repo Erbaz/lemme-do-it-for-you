@@ -1,4 +1,8 @@
 llama-index
 llama-index-llms-ollama
+llama-index-llms-openai
+llama-index-llms-openrouter
+python-dotenv
 pyautogui
 pillow
+keyboard
