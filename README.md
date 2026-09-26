@@ -16,6 +16,7 @@ An RPA agent that moves the mouse cursor to GUI components by analyzing screensh
 - [Coordinate Convergence](#coordinate-convergence)
 - [Key Concepts](#key-concepts)
 - [API Reference](#api-reference)
+- [Logging & Token Tracking](#logging--token-tracking)
 - [Troubleshooting](#troubleshooting)
 
 ---
@@ -245,6 +246,82 @@ curr_x = (1-t)**2 * start_x + 2(1-t)*t * mid_x + t**2 * target_x
 ### `LocateResult`
 
 Dataclass with `target`, `x`, `y`, `confidence`, `iterations`, `screen_width`, `screen_height`.
+
+---
+
+## Logging & Token Tracking
+
+Every session of `SelfCorrectingVisionAgentV3` automatically creates a timestamped log file in the `.logs/` directory.
+
+### Log File Naming
+
+Each time `main.py` is run, a new log file is created named with the session start timestamp:
+
+```
+.logs/
+└── 2025-09-25_14-30-00_agent.log
+```
+
+Log files are **never truncated** — they append to existing files.
+
+### What Gets Logged
+
+All log entries are prefixed with an ISO timestamp:
+
+```
+[2025-09-25 14:30:00] [INFO] Session started | Model: qwen3-vl:8b-instruct | Context Window: 262144 | Log file: 2025-09-25_14-30-00_agent.log
+[2025-09-25 14:30:01] [DEBUG] Image: iter_0.png | Size: 124800 bytes | Format: PNG | Mode: RGB
+[2025-09-25 14:30:05] [INFO] LLM Call #1 | Prompt tokens: 4521 | Completion tokens: 1832 | Cumulative total: 6353 | Context: 262144 | Remaining: 255791 | Usage: 2.42%
+```
+
+### Token Counting
+
+The agent uses **LlamaIndex's `TokenCountingHandler`** to track every LLM interaction:
+
+- **Prompt tokens** — tokens sent to the model (input)
+- **Completion tokens** — tokens received from the model (output)
+- **Cumulative total** — running sum of all tokens across the session
+
+### Context Size & Token Length Incrementer
+
+The `TokenIncrementer` tracks token consumption against the configured `context_window`:
+
+| Metric | Description |
+|---|---|
+| `context_window` | Maximum tokens the model can process (from `.env`) |
+| `cumulative_total` | Running total of all tokens used so far |
+| `remaining_tokens` | Tokens left before hitting the limit |
+| `percent_used` | Percentage of context window consumed |
+| `percent_remaining` | Percentage of context window remaining |
+| `call_count` | Total number of LLM calls made in the session |
+
+Each LLM call increments the counter, so you can monitor how close the session is to exhausting the context window.
+
+### Accessing Token Data Programmatically
+
+```python
+from agent.self_correcting_vision_agent_3 import SelfCorrectingVisionAgentV3
+import agent.logger_setup as log_setup
+
+agent = SelfCorrectingVisionAgentV3(verbose=True)
+result = agent.locate_element(target="chrome icon")
+
+# Get the token incrementer summary
+inc = log_setup.get_token_incrementer()
+print(f"Total tokens: {inc.cumulative_total}")
+print(f"Context window: {inc.context_window}")
+print(f"Remaining: {inc.remaining_tokens}")
+print(f"Usage: {inc.percent_used}%")
+print(f"Total LLM calls: {inc._call_count}")
+```
+
+### Log Level
+
+- `DEBUG` — Image details, prompts sent, full LLM responses
+- `INFO` — Session start/end, token summaries, LLM call summaries
+- `STEP` — Iteration progress, coordinate updates
+- `DONE` — Successful target confirmation
+- `ERROR` — Failed JSON parsing, unexpected responses
 
 ---
 

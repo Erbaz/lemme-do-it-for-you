@@ -4,7 +4,7 @@ import asyncio
 import pyautogui
 import pygetwindow as gw
 from llama_index.core.tools import FunctionTool
-from agent.self_correcting_vision_agent import SelfCorrectingVisionAgent
+from agent.self_correcting_vision_agent_3 import SelfCorrectingVisionAgentV3
 from constants.allowed_hotkeys import ALLOWED_HOTKEYS
 from typing import List
 
@@ -38,7 +38,7 @@ def _show_terminal(pos):
 
 
 # Initialize the vision agent globally or lazily
-vision_agent = SelfCorrectingVisionAgent()
+vision_agent = SelfCorrectingVisionAgentV3()
 
 def analyze_screen(prompt: str) -> str:
     """

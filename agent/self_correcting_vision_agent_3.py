@@ -1,8 +1,10 @@
 import json
 import os
 import re
+import shutil
 import time
 import random
+from datetime import datetime
 from dataclasses import dataclass
 from typing import Optional, List, Tuple
 
@@ -11,6 +13,7 @@ import pytweening
 from PIL import Image, ImageDraw, ImageFont
 
 import agent.model  # loads model config from .env and sets Settings.llm
+import agent.logger_setup as log_setup  # session logging, token counting
 from llama_index.core import Settings
 from llama_index.core.base.llms.types import TextBlock
 from llama_index.core.llms import ChatMessage, ImageBlock, MessageRole
@@ -56,6 +59,21 @@ class SelfCorrectingVisionAgentV3:
         )
         # Store failed points in NORMALIZED (0-1000) space
         self.history: List[Tuple[int, int]] = []
+
+        # ---- Logging & Token Tracking ----
+        self.logger = log_setup.get_logger()
+        self.incrementer = log_setup.get_token_incrementer()
+        self.incrementer.context_window = context_window
+        log_setup.update_context_window(context_window)
+
+        self.logger.info(
+            f"Session started | Model: {model_name} | "
+            f"Context Window: {context_window} | "
+            f"Log file: {log_setup.LOG_FILE_PATH.name}"
+        )
+        self.logger.info(
+            f"TokenIncrementer initialized | context_window={context_window}"
+        )
 
     def _log(self, msg: str, level: str = "INFO"):
         if self.verbose:
@@ -284,7 +302,22 @@ Return ONLY a JSON object:
             self._log(f"Could not get image details: {e}", "WARN")
 
         self._log(f"Sending prompt to LLM: {prompt[:200]}...", "DEBUG")
+
+        # ---- Token tracking ----
+        log_setup.reset_token_counts()
         response = self.llm.chat(msg)
+        tokens = log_setup.get_token_snapshot()
+        summary = self.incrementer.record_call(tokens["prompt_tokens"], tokens["completion_tokens"])
+
+        self.logger.info(
+            f"LLM Call #{summary['call_number']} | "
+            f"Prompt tokens: {tokens['prompt_tokens']} | "
+            f"Completion tokens: {tokens['completion_tokens']} | "
+            f"Cumulative total: {summary['cumulative_total']} | "
+            f"Context: {summary['context_window']} | "
+            f"Remaining: {summary['remaining_tokens']} | "
+            f"Usage: {summary['percent_used']}%"
+        )
 
         content = "".join([b.text if hasattr(b, 'text') else str(b.content) for b in response.message.blocks])
         if not content and response.message.content:
@@ -319,12 +352,20 @@ Return ONLY a JSON object:
     def _clear_screenshots(self):
         if not self.cleanup_screenshots:
             return
+        archive_dir = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+            ".logs", "screenshots", datetime.now().strftime("%Y-%m-%d_%H-%M-%S"),
+        )
+        os.makedirs(archive_dir, exist_ok=True)
         for file in os.listdir("."):
             if file.startswith("iter_") and file.endswith(".png"):
+                src = os.path.join(".", file)
+                dst = os.path.join(archive_dir, file)
                 try:
-                    os.remove(file)
-                except Exception:
-                    pass
+                    shutil.move(src, dst)
+                    self.logger.info(f"Archived screenshot: {file} -> {os.path.basename(archive_dir)}/")
+                except Exception as e:
+                    self.logger.warning(f"Failed to archive {file}: {e}")
 
     # ==================== Main Locating Workflow ====================
 
@@ -358,7 +399,14 @@ Return ONLY a JSON object:
                 self._log(f"Iteration {i} Verification: visible={is_target_visible} | center={target_at_exact_center} | confirmed={confirmed} | seen='{what_you_see}'", "DEBUG")
                 if confirmed is True and target_at_exact_center is True:
                     self._log(f"SUCCESS: Confirmed at iteration {i}! Target '{target}' is at ({curr_nx}, {curr_ny})", "DONE")
-                    return LocateResult(target, px, py, "high", i, sw, sh)
+                    result = LocateResult(target, px, py, "high", i, sw, sh)
+                    self.logger.info(
+                        f"SUCCESS | Target '{target}' confirmed at iteration {i} | "
+                        f"Result: ({result.x}, {result.y}) | "
+                        f"Total tokens used: {self.incrementer._cumulative_total} | "
+                        f"Total LLM calls: {self.incrementer._call_count}"
+                    )
+                    return result
 
                 # 2. Direct Re-estimation using CUMULATIVE CROSSHAIR MAP
                 self.history.insert(0, (curr_nx, curr_ny))
@@ -381,7 +429,14 @@ Return ONLY a JSON object:
                 curr_nx, curr_ny = new_nx, new_ny
 
             px, py = self._norm_to_native(curr_nx, curr_ny)
-            return LocateResult(target, px, py, "low", max_iterations, sw, sh)
+            result = LocateResult(target, px, py, "low", max_iterations, sw, sh)
+            self.logger.info(
+                f"Session complete | Result: ({result.x}, {result.y}) | "
+                f"Confidence: {result.confidence} | Iterations: {result.iterations} | "
+                f"Total tokens used: {self.incrementer.cumulative_total} | "
+                f"Total LLM calls: {self.incrementer._call_count}"
+            )
+            return result
 
         finally:
             self._clear_screenshots()
@@ -394,13 +449,28 @@ Return ONLY a JSON object:
         if not screenshot_path:
             self._capture_screenshot_with_scaling(path)
 
-        prompt = f"""
+        prompt_text = f"""
         Analyze the current screen and describe precisely in a bulleted list.
         You must tell me what window is open, what icons are available, what buttons are shown and / or disabled, what page is open if what you see is a website. What tabs are possibly open and what other UI elements are going to help me take the next step of navigating.
         """ if not prompt else prompt
 
-        msg = [ChatMessage(role=MessageRole.USER, blocks=[ImageBlock(path=path), TextBlock(text=prompt)])]
+        msg = [ChatMessage(role=MessageRole.USER, blocks=[ImageBlock(path=path), TextBlock(text=prompt_text)])]
+
+        # ---- Token tracking ----
+        log_setup.reset_token_counts()
         response = self.llm.chat(msg)
+        tokens = log_setup.get_token_snapshot()
+        summary = self.incrementer.record_call(tokens["prompt_tokens"], tokens["completion_tokens"])
+
+        self.logger.info(
+            f"LLM Call #{summary['call_number']} | "
+            f"Prompt tokens: {tokens['prompt_tokens']} | "
+            f"Completion tokens: {tokens['completion_tokens']} | "
+            f"Cumulative total: {summary['cumulative_total']} | "
+            f"Context: {summary['context_window']} | "
+            f"Remaining: {summary['remaining_tokens']} | "
+            f"Usage: {summary['percent_used']}%"
+        )
 
         content = "".join([b.text if hasattr(b, 'text') else str(b.content) for b in response.message.blocks])
         if not content and response.message.content:
