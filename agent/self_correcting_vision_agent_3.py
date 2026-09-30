@@ -42,7 +42,7 @@ class SelfCorrectingVisionAgentV3:
         context_window: int = 8192,
         request_timeout: float = 300.0,
         max_image_size: int = 1280,
-        grid_divisions: int = 5,  # 4 interior lines divide into 5 bands: 200, 400, 600, 800
+        grid_divisions: int = 9,  # 8 interior lines divide into 9 bands
         verbose: bool = True,
         cleanup_screenshots: bool = True,
     ):
@@ -120,47 +120,34 @@ class SelfCorrectingVisionAgentV3:
         draw = ImageDraw.Draw(img)
         font = self._get_font()
 
-        # 1. Draw 4x4 Grid Lines and Intersection Coordinate Labels
-        # Interior lines at 200, 400, 600, 800 normalized units
+        # 1. Draw 8x8 Grid Lines with coordinate labels
         if draw_grid:
             grid_coords = [int(1000 * i / self.grid_divisions) for i in range(1, self.grid_divisions)]
-
-            # Draw vertical and horizontal grid lines
-            grid_color = (255, 255, 0, 140)  # semi-transparent yellow / yellow
+            grid_color = (255, 255, 0, 200)  # more opaque yellow
             for gx in grid_coords:
                 px = int((gx / 1000) * mw)
-                draw.line([(px, 0), (px, mh)], fill="yellow", width=1)
-
+                draw.line([(px, 0), (px, mh)], fill=grid_color, width=1)
             for gy in grid_coords:
                 py = int((gy / 1000) * mh)
-                draw.line([(0, py), (mw, py)], fill="yellow", width=1)
-
-            # Draw coordinate text at all 16 intersection points
+                draw.line([(0, py), (mw, py)], fill=grid_color, width=1)
+            # Draw coordinate labels at all intersection points
             for gx in grid_coords:
                 for gy in grid_coords:
                     px, py = self._norm_to_model_img(gx, gy, mw, mh)
                     label = f"({gx},{gy})"
-
-                    # Draw small intersection marker
                     r = 3
                     draw.ellipse([px - r, py - r, px + r, py + r], fill="yellow", outline="black")
-
-                    # Draw text badge with background for high readability
                     bbox = draw.textbbox((px + 5, py + 3), label, font=font)
                     draw.rectangle([bbox[0] - 2, bbox[1] - 1, bbox[2] + 2, bbox[3] + 1], fill=(0, 0, 0, 180), outline="yellow")
                     draw.text((px + 5, py + 3), label, fill="yellow", font=font)
 
-        # 2. Draw History Points (all attempts with distinct colors)
+        # 2. Draw History Points (colored dots only, no labels)
         history_colors = ["cyan", "#FF00FF", "#00FF00", "#FFA500", "#00FFFF", "#FF69B4"]
         for i, pos in enumerate(self.history[:6]):
             hx, hy = self._norm_to_model_img(pos[0], pos[1], mw, mh)
             color = history_colors[i % len(history_colors)]
             r = 8
             draw.ellipse([hx - r, hy - r, hx + r, hy + r], fill=color, outline="black", width=2)
-            h_label = f"T{i+1}:({pos[0]},{pos[1]})"
-            h_bbox = draw.textbbox((hx + 10, hy - 8), h_label, font=font)
-            draw.rectangle([h_bbox[0] - 2, h_bbox[1] - 1, h_bbox[2] + 2, h_bbox[3] + 1], fill="black", outline=color)
-            draw.text((hx + 10, hy - 8), h_label, fill=color, font=font)
 
         # 3. Draw Current (RED Local Target Ring - NO screen-wide lines)
         if curr_norm:
@@ -184,76 +171,33 @@ class SelfCorrectingVisionAgentV3:
 
     # ==================== Prompt Methods (Direct Re-estimation) ====================
 
+    def _get_grid_vector(self, nx: int, ny: int) -> str:
+        """Return grid position as 'row x column' for 9x9 grid."""
+        row = int(ny * 9 / 1000)
+        col = int(nx * 9 / 1000)
+        return f"{row} x {col}"
+
+    # ==================== Prompt Methods (Direct Re-estimation) ====================
+
     def _get_locate_prompt(self, target: str) -> str:
-        return f"""You are a computer vision engine analyzing a screen with an overlaid coordinate grid.
-A yellow grid of lines divides the image with coordinates (200, 400, 600, 800) marked at every intersection on a 0 to 1000 scale:
-- (0, 0) is top-left
-- (1000, 1000) is bottom-right
+        return f"""A RED crosshair marks the current guess position on this screenshot.
+A yellow grid overlay shows position markers with coordinate labels like (222,444) at each intersection.
+Locate "{target}" in the screenshot and give its grid vector AND coordinates.
+Return ONLY valid JSON: {{"x": integer, "y": integer, "grid_vector": "row x column"}}"""
 
-Task: Find the exact center coordinates of "{target}".
-Use the visible intersection coordinate markers (e.g., (200,800), (600,800), etc.) to accurately determine where "{target}" is located.
-
-Return ONLY a JSON object:
-{{"x": <0-1000>, "y": <0-1000>}}"""
-
-    def _get_verify_prompt(self, target: str, nx: int, ny: int) -> str:
-        return f"""You are looking at a FULL SCREENSHOT on a 0 to 1000 coordinate scale with a yellow grid overlay.
-A RED target ring (circle + crosshair ticks + center dot) is placed at normalized coordinates ({nx}, {ny}).
-
-The crosshair history is also visible on this image as colored points (T1, T2, T3, etc.) with labels showing their coordinates.
-
-TASK: Look carefully at what is at the EXACT center of the RED target ring (the center dot).
-
-Follow these steps in order:
-
-STEP 1: Identify the exact center pixel of the red center dot.
-STEP 2: Look at the grid coordinates near that center point. What UI element is at that exact location?
-STEP 3: Is that element "{target}"? Or is it something else entirely?
-STEP 4: Be strict — if the target is even 1 pixel away from the center dot, it is NOT confirmed.
-
-Use the colored history points (T1, T2, T3...) as visual references to understand where the crosshairs have been in previous attempts and how far off they were.
-
-Return ONLY a JSON object:
-{{
-    "what_you_see": "<describe what is at the exact center of the red dot>",
-    "is_target_visible": true or false,
-    "target_at_exact_center": true or false,
-    "confirmed": true or false
-}}"""
+    def _get_verify_prompt(self, target: str) -> str:
+        return f"""Look at the RED crosshair at the center of this image.
+Describe ONLY what you see at the red crosshair position — do NOT give coordinates.
+Do NOT tell me where the target is. Just describe what is at the crosshair location.
+Answer ONLY with a JSON object:
+{{"description": "what you see at the red crosshair"}}"""
 
     def _get_reestimate_prompt(self, target: str, nx: int, ny: int) -> str:
-        color_names = ["cyan", "magenta", "green", "orange", "pink"]
-        history_descriptions = []
-        for i, pos in enumerate(self.history[:6]):
-            color = color_names[i] if i < len(color_names) else f"point_{i+1}"
-            history_descriptions.append(f"- {color.upper()} point T{i+1} at ({pos[0]}, {pos[1]})")
-
-        history_text = ""
-        if history_descriptions:
-            history_text = "\nAll Previous Attempts (in order):\n" + "\n".join(history_descriptions) + "\n"
-
-        return f"""You are looking at a CUMULATIVE CROSSHAIR MAP on a 0 to 1000 coordinate scale.
-Yellow grid lines mark intersections labeled with exact (x, y) coordinates.
-The RED crosshair is currently at normalized coordinates ({nx}, {ny}).
-{history_text}
-TASK: You must REASON SPATIALLY to determine where "{target}" actually is.
-
-Do NOT guess. Follow these steps in order:
-
-STEP 1: Look at the positions of all the colored crosshair points (T1, T2, T3, ...) and the RED crosshair.
-STEP 2: Identify the DIRECTION from each crosshair point TO the target "{target}". Is the target above, below, left, or right?
-STEP 3: Identify the NEAREST crosshair point to the target and which direction you would need to move to reach "{target}" from that point.
-STEP 4: Based on the spatial pattern of all crosshair points combined, DEDUCE the most likely absolute coordinates (0-1000) of "{target}".
-
-IMPORTANT: Think step by step. The target is NOT at any crosshair position.
-Look at where "{target}" actually sits on screen relative to ALL crosshair points combined.
-
-Return ONLY a JSON object:
-{{
-    "reasoning": "<briefly describe spatial reasoning: which direction from which crosshair point>",
-    "x": <integer between 0 and 1000>,
-    "y": <integer between 0 and 1000>
-}}"""
+        gv = self._get_grid_vector(nx, ny)
+        return f"""A RED crosshair is at ({nx}, {ny}), which is grid position {gv}.
+The target is "{target}". Move the crosshair to a DIFFERENT grid position and give new coordinates.
+The grid has labeled intersections like (222,444). Use them for spatial reference.
+Return ONLY valid JSON: {{"x": integer, "y": integer, "grid_vector": "row x column"}}"""
 
 
     def _create_cumulative_map(self, full_screenshot_path: str) -> str:
@@ -301,7 +245,7 @@ Return ONLY a JSON object:
         except Exception as e:
             self._log(f"Could not get image details: {e}", "WARN")
 
-        self._log(f"Sending prompt to LLM: {prompt[:200]}...", "DEBUG")
+        self._log(f"Sending prompt to LLM: {prompt}", "DEBUG")
 
         # ---- Token tracking ----
         log_setup.reset_token_counts()
@@ -328,7 +272,11 @@ Return ONLY a JSON object:
         if not match:
             self._log(f"ERROR: No JSON found in response! Content: {content}", "ERROR")
             raise ValueError(f"No JSON found in LLM response: {content}")
-        return json.loads(match.group(0))
+        try:
+            return json.loads(match.group(0))
+        except json.JSONDecodeError:
+            self._log(f"ERROR: Invalid JSON from LLM: {match.group(0)}", "ERROR")
+            raise ValueError(f"Invalid JSON from LLM: {match.group(0)}")
 
     # ==================== Mouse Movement ====================
 
@@ -390,23 +338,10 @@ Return ONLY a JSON object:
                 path = f"iter_{i}.png"
                 path, mw, mh = self.capture_processed_screenshot(path, curr_norm=(curr_nx, curr_ny), draw_grid=True)
 
-                # 1. Verify using the FULL SCREENSHOT with crosshair + history visible
-                v_data = self._chat(path, self._get_verify_prompt(target, curr_nx, curr_ny))
-                what_you_see = v_data.get("what_you_see", "unknown")
-                is_target_visible = v_data.get("is_target_visible", False)
-                target_at_exact_center = v_data.get("target_at_exact_center", False)
-                confirmed = v_data.get("confirmed", False)
-                self._log(f"Iteration {i} Verification: visible={is_target_visible} | center={target_at_exact_center} | confirmed={confirmed} | seen='{what_you_see}'", "DEBUG")
-                if confirmed is True and target_at_exact_center is True:
-                    self._log(f"SUCCESS: Confirmed at iteration {i}! Target '{target}' is at ({curr_nx}, {curr_ny})", "DONE")
-                    result = LocateResult(target, px, py, "high", i, sw, sh)
-                    self.logger.info(
-                        f"SUCCESS | Target '{target}' confirmed at iteration {i} | "
-                        f"Result: ({result.x}, {result.y}) | "
-                        f"Total tokens used: {self.incrementer._cumulative_total} | "
-                        f"Total LLM calls: {self.incrementer._call_count}"
-                    )
-                    return result
+                # 1. Verify: describe what's at the crosshair (for logging only)
+                v_data = self._chat(path, self._get_verify_prompt(target))
+                v_desc = v_data.get("description", "")
+                self._log(f"Iteration {i} Verification: desc='{v_desc[:80]}...'", "DEBUG")
 
                 # 2. Direct Re-estimation using CUMULATIVE CROSSHAIR MAP
                 self.history.insert(0, (curr_nx, curr_ny))
@@ -423,17 +358,32 @@ Return ONLY a JSON object:
                         pass
                 new_nx = max(0, min(1000, int(re_data["x"])))
                 new_ny = max(0, min(1000, int(re_data["y"])))
-                reasoning = re_data.get("reasoning", "")
+                new_gv = self._get_grid_vector(new_nx, new_ny)
+                old_gv = self._get_grid_vector(curr_nx, curr_ny)
 
-                self._log(f"Iteration {i}: Missed. Re-estimated from ({curr_nx}, {curr_ny}) -> ({new_nx}, {new_ny}) | {reasoning}", "STEP")
+                self._log(f"Iteration {i}: Re-estimated ({curr_nx},{curr_ny}) -> ({new_nx},{new_ny}) | grid {old_gv} -> {new_gv}", "STEP")
                 curr_nx, curr_ny = new_nx, new_ny
+
+                # Convergence check: same grid_vector for 2+ iterations
+                if hasattr(self, '_last_gv') and self._last_gv == new_gv:
+                    self._log(f"SUCCESS: Converged at grid {new_gv} | ({curr_nx}, {curr_ny})", "DONE")
+                    px, py = self._norm_to_native(curr_nx, curr_ny)
+                    result = LocateResult(target, px, py, "high", i, sw, sh)
+                    self.logger.info(
+                        f"SUCCESS | Target '{target}' converged at iteration {i} | "
+                        f"Result: ({result.x}, {result.y}) | "
+                        f"Total tokens used: {self.incrementer._cumulative_total} | "
+                        f"Total LLM calls: {self.incrementer._call_count}"
+                    )
+                    return result
+                self._last_gv = new_gv
 
             px, py = self._norm_to_native(curr_nx, curr_ny)
             result = LocateResult(target, px, py, "low", max_iterations, sw, sh)
             self.logger.info(
                 f"Session complete | Result: ({result.x}, {result.y}) | "
                 f"Confidence: {result.confidence} | Iterations: {result.iterations} | "
-                f"Total tokens used: {self.incrementer.cumulative_total} | "
+                f"Total tokens used: {self.incrementer._cumulative_total} | "
                 f"Total LLM calls: {self.incrementer._call_count}"
             )
             return result
@@ -488,6 +438,7 @@ Return ONLY a JSON object:
 
 if __name__ == "__main__":
     # Set cleanup_screenshots=False during interactive testing so you can review iter_*.png files
+    import time
     agent = SelfCorrectingVisionAgentV3(cleanup_screenshots=False)
     if input("Do you want to analyze the current screen? (y/n): ") == "y":
         prompt = input("Enter a prompt for the vision agent: ")
@@ -495,5 +446,6 @@ if __name__ == "__main__":
         print(f"\nANALYSIS: {analysis}")
     else:
         prompt = input("Enter a target to locate on the screen: ")
+        time.sleep(5)
         res = agent.locate_element(target=prompt)
         print(f"\nRESULT: ({res.x}, {res.y}) [Confidence: {res.confidence}, Iterations: {res.iterations}]")

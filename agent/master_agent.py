@@ -51,10 +51,11 @@ class MasterAgent:
     The Master ReAct Agent that orchestrates the execution of tasks.
     It uses a text-based LLM to reason and calls tools (including the Vision Agent) to interact.
     """
-    def __init__(self, model_name: str = "qwen3-vl:4b-instruct"):
+    def __init__(self, model_name: str = "qwen3-vl:4b-instruct", max_iterations: int = 20):
         # Or if we want to stick to qwen, we can use a qwen text model.
         # Let's parameterize it. You can change this to your preferred local model.
         self.llm = Settings.llm
+        self.max_iterations = max_iterations
         
         memory = Memory.from_defaults(session_id="my_session", token_limit=4096)
 
@@ -79,7 +80,7 @@ class MasterAgent:
         """
         Sends a message to the agent and returns its response.
         """
-        handler = self.agent.run(user_input, ctx=self.ctx)
+        handler = self.agent.run(user_input, ctx=self.ctx, max_iterations=self.max_iterations)
         
         async for ev in handler.stream_events():
             # if isinstance(ev, ToolCallResult):
@@ -99,5 +100,7 @@ class MasterAgent:
 
 if __name__ == "__main__":
     user_instruction = input("User: ")
-    agent = MasterAgent()
+    max_iters = input("Max iterations [default 20]: ").strip()
+    max_iters = int(max_iters) if max_iters else 20
+    agent = MasterAgent(max_iterations=max_iters)
     asyncio.run(agent.chat(user_instruction))

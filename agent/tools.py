@@ -4,9 +4,9 @@ import asyncio
 import pyautogui
 import pygetwindow as gw
 from llama_index.core.tools import FunctionTool
-from agent.self_correcting_vision_agent_3 import SelfCorrectingVisionAgentV3
+from agent.self_correcting_vision_agent_4 import SelfCorrectingVisionAgentV4
 from constants.allowed_hotkeys import ALLOWED_HOTKEYS
-from typing import List
+from typing import List, Optional
 
 TERMINAL_TITLE = "MyHiddenTerminal"
 
@@ -38,7 +38,7 @@ def _show_terminal(pos):
 
 
 # Initialize the vision agent globally or lazily
-vision_agent = SelfCorrectingVisionAgentV3()
+vision_agent = SelfCorrectingVisionAgentV4()
 
 def analyze_screen(prompt: str) -> str:
     """
@@ -51,10 +51,17 @@ def analyze_screen(prompt: str) -> str:
     print(f"DEBUG: Tool called with prompt: {prompt}")
     terminal_pos = None
     try:
+        vision_agent.clear_thought_process()
         terminal_pos = _hide_terminal()
         time.sleep(0.3)
         response = vision_agent.analyze_current_screen(prompt)
         print(f"DEBUG: Vision agent returned: {response[:500] if response else 'None'}")
+        
+        thoughts = vision_agent.get_thought_process()
+        if thoughts:
+            thought_log = "\n".join(f"  [{i+1}] {t}" for i, t in enumerate(thoughts))
+            print(f"DEBUG: Agent thought process:\n{thought_log}")
+            return f"Vision Analysis Result:\n{response}\n\nAgent Thought Process:\n{thought_log}"
         return f"Vision Analysis Result:\n{response}"
     except Exception as e:
         print(f"ERROR: Failed to analyze screen: {type(e).__name__}: {str(e)}")
@@ -65,32 +72,94 @@ def analyze_screen(prompt: str) -> str:
             _show_terminal(terminal_pos)
 
 
-def move_mouse(prompt: str) -> str:
+def drag_mouse(prompt: str, keys: Optional[List[str]] = None) -> str:
     """
-    Takes the targetted GUI element on screen in prompt and gives it to the vision agent to move mouse cursor to it's postion.
-    The vision agent will try to move the mouse to the desired GUI object / element so make sure to describe precisely and concisely the target.
-    For example, if you wish to move the mouse to a form field, say: "form field with label username".
-    If the vision agent is successful, it will output a json object structure that looks like:
-    {"target": "<target>", "x": <x>, "y": <y>, "confidence": "<confidence>", "iterations": <iterations>}
-    Do not bother with explaining, be direct in the prompt. Only identify the target with a description if needed. Do not use filler words.
-    If the confidence in response is low, you must call this tool with a better prompt
+    Moves the mouse cursor to the target GUI element specified in prompt,
+    optionally holding down the specified keys/buttons during the movement.
+    When no keys are provided, this acts as a simple move operation.
+    This enables drag operations like left-click drag, right-click drag,
+    right-click + shift drag, etc.
+
+    The vision agent handles the mouse movement internally. This function
+    simply presses the specified keys before calling locate_element, then
+    releases them afterward.
+
+    Args:
+        prompt: Description of the target GUI element to drag to.
+                Be precise and concise (e.g., "wifi icon located at the right of the bottom toolbar").
+        keys: Optional list of keys/buttons to press simultaneously during the drag.
+              Mouse buttons: "left", "right", "middle"
+              Keyboard keys: any valid key name (e.g., "ctrl", "shift", "alt")
+              Examples: ["left"], ["right"], ["ctrl", "left"], ["shift", "right"]
+              When None or empty, acts as a simple mouse move.
+
+    Returns:
+        A string with the vision agent result and drag confirmation.
+
+    For example, to left-click drag to a target:
+        drag_mouse(prompt="the save button", keys=["left"])
+
+    To right-click drag with shift held:
+        drag_mouse(prompt="the delete option", keys=["right", "shift"])
+
+    To simply move the mouse (no drag):
+        drag_mouse(prompt="the save button")
     """
     import traceback
-    print(f"DEBUG: Tool called with prompt: {prompt}")
+
+    print(f"DEBUG: Tool called with prompt: {prompt}, keys: {keys}")
     terminal_pos = None
+
+    MOUSE_BUTTONS = {"left", "right", "middle"}
+
     try:
         terminal_pos = _hide_terminal()
         time.sleep(0.3)
-        response = vision_agent.locate_element(prompt)
-        print(f"DEBUG: Vision agent returned: {response}")
-        return f"Vision Agent Result:\n{response}"
+
+        # Separate mouse buttons from keyboard keys
+        mouse_buttons = [k for k in keys if k.lower() in MOUSE_BUTTONS] if keys else []
+        keyboard_keys = [k for k in keys if k.lower() not in MOUSE_BUTTONS] if keys else []
+
+        # Press all mouse buttons and keyboard keys down
+        for mb in mouse_buttons:
+            pyautogui.mouseDown(button=mb.lower())
+        for k in keyboard_keys:
+            pyautogui.keyDown(k.lower())
+
+        try:
+            # Get target coordinates from the vision agent
+            # This moves the mouse to the target position with smooth animation
+            vision_agent.clear_thought_process()
+            result = vision_agent.locate_element(prompt)
+            print(f"DEBUG: Vision agent returned: {result}")
+            target_x, target_y = result.x, result.y
+            
+            thoughts = vision_agent.get_thought_process()
+            thought_log = ""
+            if thoughts:
+                thought_log = "\n".join(f"  [{i+1}] {t}" for i, t in enumerate(thoughts))
+                print(f"DEBUG: Agent thought process:\n{thought_log}")
+            
+            drag_info = f"Vision Agent Result:\n{result}\nDrag completed to ({target_x}, {target_y}) with keys: {keys}"
+            if thought_log:
+                drag_info += f"\n\nAgent Thought Process:\n{thought_log}"
+            return drag_info
+        finally:
+            # Release all keys/buttons in reverse order
+            for mb in reversed(mouse_buttons):
+                pyautogui.mouseUp(button=mb.lower())
+            for k in reversed(keyboard_keys):
+                pyautogui.keyUp(k.lower())
+
     except Exception as e:
-        print(f"ERROR: Failed to move mouse: {type(e).__name__}: {str(e)}")
+        print(f"ERROR: Failed to drag: {type(e).__name__}: {str(e)}")
         print(f"ERROR: Full traceback:\n{traceback.format_exc()}")
-        return f"Failed to move mouse: {str(e)}"
+        return f"Failed to drag: {str(e)}"
+
     finally:
         if terminal_pos:
             _show_terminal(terminal_pos)
+
 
 def left_click() -> str:
     """
@@ -192,11 +261,11 @@ async def delay_callback(_tool=None):
 
 agent_tools = [
     FunctionTool.from_defaults(fn=analyze_screen),
-    FunctionTool.from_defaults(fn=move_mouse),
     FunctionTool.from_defaults(fn=left_click),
     FunctionTool.from_defaults(fn=right_click),
     FunctionTool.from_defaults(fn=double_click, async_callback=delay_callback),
     FunctionTool.from_defaults(fn=type_text),
     FunctionTool.from_defaults(fn=press_key, async_callback=delay_callback),
-    FunctionTool.from_defaults(fn=execute_hotkey, async_callback=delay_callback)
+    FunctionTool.from_defaults(fn=execute_hotkey, async_callback=delay_callback),
+    FunctionTool.from_defaults(fn=drag_mouse),
 ]
