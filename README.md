@@ -1,6 +1,6 @@
-# Lemme Do It For You — Self-Correcting Vision Agent
+# Lemme Do It For You — Windows GUI Automation Agent
 
-An RPA agent that moves the mouse cursor to GUI components by analyzing screenshots with a multimodal vision model. Uses iterative self-correction with spatial reasoning to converge on target element coordinates.
+A Windows GUI automation agent that controls desktop applications through UI Automation (UIA) and a LangGraph ReAct agent. It launches applications, navigates menus, clicks buttons, and types into fields using physical mouse movement and clicks — not just UIA API calls.
 
 ![License](https://img.shields.io/badge/License-MIT-green)
 
@@ -13,25 +13,23 @@ An RPA agent that moves the mouse cursor to GUI components by analyzing screensh
 - [Quick Start](#quick-start)
 - [Configuration](#configuration)
 - [How It Works](#how-it-works)
-- [Coordinate Convergence](#coordinate-convergence)
-- [Key Concepts](#key-concepts)
-- [API Reference](#api-reference)
-- [Logging & Token Tracking](#logging--token-tracking)
+- [Tools](#tools)
+- [Example Workflows](#example-workflows)
+- [Milestone 1 — Agent Tool Calling Analysis](#milestone-1)
 - [Troubleshooting](#troubleshooting)
+- [License](#license)
 
 ---
 
 ## Features
 
-- **GUI Element Localization** — Move the mouse cursor to any visible GUI component (buttons, icons, form fields, menu items, etc.) by describing them in natural language
-- **Visual Screen Analysis** — Get a detailed description of the current screen state (open windows, browser tabs, UI elements, disabled controls)
-- **Crop-and-Zoom Convergence** — Phase 1 identifies a grid cell on the full screen; Phase 2 crops and zooms into that cell with a fresh 8×8 sub-grid for 64× finer precision; depth reduction backs out to search a different cell when the target isn't found
-- **Dual-Gate Verification** — Two independent LLM checks (target in grid region + target at crosshair) must both pass before confirming a match
-- **8×8 Grid Overlay** — Yellow grid with zero-indexed row/column labels (0-7) on every screenshot, anchoring spatial reasoning
-- **Depth Reduction** — Auto-recovers from misidentified grid cells by returning to full-screen grid scan when the target isn't visible in the current crop
-- **Human-Like Mouse Movement** — Smooth easing animation (ease-in-out quadratic) with randomized perturbations mimics natural human cursor movement
-- **Resolution-Independent Coordinates** — All internal coordinates use a normalized 0–1000 scale, making the system resolution-agnostic
-- **Crosshair History Tracking** — Every cursor position is recorded as a colored marker on screenshots, building a visual search history
+- **Physical mouse clicks** — Moves the cursor to an element's bounding-box center via `SetCursorPos`, then clicks via `mouse_event` with `MOUSEEVENTF_ABSOLUTE`. Works where pure UIA `InvokePattern` fails (e.g., Windows Start button).
+- **Accessibility tree exploration** — `get_top_level_windows()`, `get_interactable_elements()`, `read_accessibility_tree()` to discover UI elements and their selectors.
+- **Feedback state after every action** — `click_element()` and `type_text()` return a trimmed `CURRENT UI STATE` block so the agent sees what new UI appeared after each action.
+- **Selector-based targeting** — `name:`, `class:`, `id:` (automation_id), or combined selectors.
+- **Double-click support** — For Start Menu items and other elements that need activation.
+- **ReAct agent** — LangGraph `create_react_agent` loop with `reasoning_effort="low"` for deterministic tool use.
+- **Timeout protection** — Agent invocations run in a thread with a configurable timeout.
 
 ---
 
@@ -39,17 +37,62 @@ An RPA agent that moves the mouse cursor to GUI components by analyzing screensh
 
 ```
 lemme-do-it-for-you/
-├── agent/
-│   ├── self_correcting_vision_agent.py    # V1/V2 — screen-wide crosshair (legacy)
-│   ├── self_correcting_vision_agent_3.py  # V3 — local crosshair, cumulative map, spatial reasoning
-│   ├── self_correcting_vision_agent_4.py  # V4 — crop-and-zoom iterative convergence with 8x8 grid
-│   ├── tools.py                            # Tool interface (move_mouse, analyze_screen, click, type_text, etc.)
-│   └── model.py                            # Loads .env config, sets up LLM (Ollama or OpenRouter)
-├── constants/
-│   └── allowed_hotkeys.py                  # Whitelisted keyboard hotkeys
-├── test_vision_agent.py                    # Diagnostic test script
-├── .env                                    # Model provider and configuration
-└── README.md
+├── gui_agent/
+│   ├── main.py              # CLI entry point
+│   ├── sys_prompt.py        # System prompt for the agent
+│   ├── tools.py             # Tool registry (aggregates all @tool functions)
+│   ├── pyproject.toml       # Package config & dependencies
+│   ├── __init__.py
+│   ├── common/
+│   │   ├── __init__.py
+│   │   ├── agent/
+│   │   │   ├── __init__.py
+│   │   │   ├── base_agent.py      # langchain_create_agent() factory
+│   │   │   ├── callbacks.py       # GuiAgentCallbackHandler
+│   │   │   └── state.py           # AgentState TypedDict
+│   │   ├── input/
+│   │   │   ├── mouse.py           # move_mouse(), mouse_click(), get_mouse_position()
+│   │   │   ├── keyboard.py        # send_keys()
+│   │   │   └── __init__.py
+│   │   ├── platform/
+│   │   │   ├── detector.py        # PlatformDetector
+│   │   │   └── capabilities.py
+│   │   ├── utils/
+│   │   │   ├── logging.py         # setup_logging()
+│   │   │   └── file_logging.py    # per-run timestamped log files
+│   │   └── __init__.py
+│   ├── windows/
+│   │   ├── __init__.py
+│   │   ├── uia/
+│   │   │   ├── __init__.py
+│   │   │   ├── locator.py         # find_element(), get_root(), build_selector()
+│   │   │   └── patterns.py        # invoke(), set_value(), scroll(), etc.
+│   │   └── tools/
+│   │       ├── __init__.py
+│   │       └── uia_tools/
+│   │           ├── __init__.py
+│   │           ├── click_element.py     # Physical move + click + UI state feedback
+│   │           ├── type_text.py         # Type + UI state feedback
+│   │           ├── find_element.py      # find_element_tool
+│   │           ├── find_elements.py     # find_elements_tool
+│   │           ├── mouse_click.py       # mouse_click (standalone)
+│   │           ├── read_accessibility_tree.py
+│   │           ├── get_focused_element_info.py
+│   │           ├── get_element_at_point.py
+│   │           ├── scroll_element.py
+│   │           ├── expand_element.py
+│   │           ├── collapse_element.py
+│   │           ├── get_top_level_windows.py
+│   │           ├── get_focused_windows.py
+│   │           └── get_interactable_elements.py
+│   └── .logs/               # Per-run timestamped log files (gitignored)
+├── gui_agent.md             # Detailed implementation notes & Milestone 1
+├── gui-agent-plan.md        # Project plan
+├── README.md                # This file
+├── requirements.txt         # Python dependencies
+├── .env                     # API keys & model config (gitignored)
+├── .gitignore
+└── .env                     # Environment variables (gitignored)
 ```
 
 ---
@@ -58,320 +101,219 @@ lemme-do-it-for-you/
 
 ### Prerequisites
 
-- Python 3.12+
-- [Ollama](https://ollama.com/) running a vision-capable model (e.g., `qwen3-vl:4b-instruct`, `qwen3-vl:8b-instruct`)
-- Or an OpenRouter API key
+- Python 3.10+
+- Windows (UIA is Windows-only)
+- OpenRouter API key (or another supported LLM provider)
 
-### 1. Configure Environment
-
-```bash
-cp .env.example .env
-# Edit .env to set MODEL_PROVIDER, MODEL_NAME, etc.
-```
-
-| Variable             | Default                  | Description                |
-| -------------------- | ------------------------ | -------------------------- |
-| `MODEL_PROVIDER`     | `ollama`                 | `ollama` or `openrouter`   |
-| `MODEL_NAME`         | `qwen3-vl:8b-instruct`   | Vision model name          |
-| `OLLAMA_BASE_URL`    | `http://localhost:11434` | Ollama server URL          |
-| `OPENROUTER_API_KEY` | _(empty)_                | OpenRouter API key         |
-| `CONTEXT_WINDOW`     | `8192`                   | LLM context window size    |
-| `REQUEST_TIMEOUT`    | `120.0`                  | Request timeout in seconds |
-
-### 2. Run Interactively
+### 1. Install Dependencies
 
 ```bash
-python -m agent.self_correcting_vision_agent_4
+cd c:\Users\pc\Desktop\lemme-do-it-for-you
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+pip install -e gui_agent/
 ```
 
-### 3. Use Programmatically
+### 2. Configure Environment
 
-```python
-from agent.self_correcting_vision_agent_4 import SelfCorrectingVisionAgentV4
+Create a `.env` file at the project root:
 
-agent = SelfCorrectingVisionAgentV4(model_name="qwen3-vl:4b-instruct", verbose=True)
-
-# Locate a GUI element and move the mouse to it
-result = agent.locate_element(target="google chrome icon on taskbar")
-print(f"Found at ({result.x}, {result.y}) with {result.confidence} confidence in {result.iterations} iterations")
-
-# Analyze the current screen
-analysis = agent.analyze_current_screen(prompt="What browser tabs are open?")
-print(analysis)
+```
+MODEL_PROVIDER=openrouter
+MODEL_NAME=nvidia/nemotron-3.5-lightning:free
+OPENROUTER_API_KEY=your-api-key-here
+LOG_LEVEL=INFO
 ```
 
-### 4. Use via Tool Interface
-
-```python
-from agent.tools import move_mouse, analyze_screen, left_click, type_text, press_key, execute_hotkey
-
-result = move_mouse(prompt="the save button in the toolbar")
-description = analyze_screen(prompt="Describe all open windows")
-left_click()
-type_text("Hello, World!")
-press_key("enter")
-execute_hotkey(["ctrl", "s"])
-```
-
-### 5. Run Diagnostics
+### 3. Run the Agent
 
 ```bash
-python test_vision_agent.py
+python gui_agent/main.py "Open Notepad" --timeout=120
 ```
+
+The agent will:
+1. Check what windows are currently running
+2. Launch the app via Start Menu if needed
+3. Verify the app appeared
+4. Report success
+
+---
 
 ## Configuration
 
-### `SelfCorrectingVisionAgentV4` Parameters
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `MODEL_PROVIDER` | `openrouter` | `openrouter`, `openai`, or `ollama` |
+| `MODEL_NAME` | `dots-studio/dots-3-note-preview:free` | Model identifier |
+| `OPENROUTER_API_KEY` | *(required)* | Your OpenRouter API key |
+| `OPENAI_API_KEY` | *(optional)* | Fallback for OpenRouter or OpenAI provider |
+| `LOG_LEVEL` | `INFO` | `DEBUG`, `INFO`, `WARNING`, `ERROR` |
+| `OPENAI_BASE_URL` | `https://openrouter.ai/api/v1` | API base URL |
 
-```python
-SelfCorrectingVisionAgentV4(
-    model_name="qwen3-vl:4b-instruct",
-    context_window=8192, request_timeout=300.0, max_image_size=1280,
-    grid_divisions=8, overlap_percentage=0.10, verbose=True, cleanup_screenshots=True,
-)
+### Supported Providers
+
+- **openrouter** — `https://openrouter.ai/api/v1`
+- **openai** — `https://api.openai.com/v1`
+- **ollama** — `http://localhost:11434/v1`
 ```
 
-| Parameter | Default | Description |
-|---|---|---|
-| `grid_divisions` | `8` | Grid size (8 means 8×8 = 64 cells) |
-| `overlap_percentage` | `0.10` | Overlap between grid cells (10%) for border element confidence |
-| `max_image_size` | `1280` | Maximum width/height for LLM input images |
-
-### `locate_element` Parameters
-
-```python
-result = agent.locate_element(target="chrome icon", max_iterations=5)
-```
-
-Returns a `LocateResult` dataclass with `target`, `x`, `y`, `confidence`, `iterations`, `screen_width`, `screen_height`.
-
----
+This starts the Imajev decision server at `http://localhost:8765` (OpenAI-compatible `POST /v1/systemone`) that the V6 agent calls for single-inference presence confirmations during crop-and-zoom convergence.
 
 ## How It Works
 
-### Overview
+### Architecture
 
-The **V4 agent** uses a **crop-and-zoom iterative convergence** loop to locate GUI elements. It combines a multimodal vision model (LLM with image input) with a normalized coordinate system (0–1000) and an 8×8 grid overlay. Each iteration narrows the search field by cropping and zooming into the region from the previous step, dramatically increasing precision.
+The agent is a **LangGraph ReAct loop** (`create_react_agent`) with a custom system prompt. It does not use Deep Agents (which caused over-exploration and wrong tool selection).
 
-### Crop-and-Zoom Workflow
+### Click Pipeline
+
+Every `click_element` call follows this sequence:
+
+1. **Find element** � Locate the UI element by selector (`name:`, `class:`, `id:`)
+2. **Verify tree** � Read the element's accessibility tree to confirm it has content
+3. **Move mouse** � `SetCursorPos()` to the element's bounding-box center
+4. **Settle** � Wait 0.5s for the cursor to stabilize
+5. **Click** � `mouse_event()` with `MOUSEEVENTF_LEFTDOWN | ABSOLUTE`, then `LEFTUP | ABSOLUTE`
+6. **Report** � Return `Clicked element: <selector>` + compact `CURRENT UI STATE`
+
+### Type Pipeline
+
+1. **Find element** � Locate the input field
+2. **Type** � Send keystrokes via UIA patterns
+3. **Settle** � Wait 0.5s for UI to react (e.g., search results)
+4. **Report** � Return `Typed text into: <selector>` + `CURRENT UI STATE`
+
+### Feedback State
+
+After every action, the tool returns a trimmed UI snapshot:
 
 ```
-PHASE 1: Full-Screen Grid Scan
-  Capture full screenshot (scaled) with 8×8 grid overlay
-  Ask LLM: "Which grid cell contains the target?"
-  Response: {"grid_vector": "row x column"}  e.g., "5 x 4"
-      |
-      v
-PHASE 2: Cropped Zoom-In
-  Crop to the identified grid cell (with 10% overlap for border elements)
-  Draw 8×8 sub-grid + red crosshair at cell center
-  Ask LLM: "Which sub-cell contains the target?"
-  Response: {"grid_vector": "3 x 2"}
-  Convert sub-grid position back to full-screen normalized coords
-      |
-      v
-VERIFICATION LOOP (up to max_iterations):
-  1. MOVE: Normalized coords → native screen pixels (ease-in-out easing)
-  2. CAPTURE: Two images:
-     - CLEAN crop with grid overlay (no crosshair) → "Is target visible in this region?"
-     - CROSSHAIR crop with grid + red crosshair → "Does crosshair sit on the target?"
-  3. VERIFY: If target confirmed at crosshair position → SUCCESS!
-  4. RE-ESTIMATE: 
-     - If target NOT at crosshair: ask LLM to move to a different sub-cell
-     - If target NOT in grid: trigger depth reduction (go back to full-screen grid)
-  5. UPDATE: Push current position to history, continue loop
+CURRENT UI STATE (top interactable elements):
+  - "Search" [WindowControl] selector="name:Search"
+  - "Search box" [EditControl] selector="id:SearchTextBox"
+  - "Taskbar" [PaneControl] selector="name:Taskbar"
+Focused windows:
+  {
+    "name": "Search",
+    "focused_control_name": "Search box",
+    ...
+  }
 ```
 
-**Phase 1-N:** Normalized `(nx, ny)` coordinates are resolution-independent (0–1000 space). Screenshots are annotated with an 8×8 yellow grid (125px intervals), a local RED crosshair (25px ticks, 2px dot, 14px ring), and colored history markers from previous iterations. The LLM's crosshair and grid reasoning provides spatial context for each refinement step.
+This lets the agent see what new elements appeared (e.g., Start Menu, Search box) and correct its next action.
 
 ---
 
-## Coordinate Convergence
+## Tools
 
-### Normalized Coordinate Space (0-1000)
-
-All coordinates use a **normalized 0-1000 space** independent of screen resolution:
-
-- (0, 0) = top-left, (1000, 1000) = bottom-right, (500, 500) = center
-
-**Conversion:** `nx = (x / screen_width) * 1000`
-
-**Crop-relative remapping:** When the image is cropped to a sub-region and resized, full-screen normalized coordinates are remapped relative to the crop before drawing the crosshair: `pixel_x = ((nx - x_min) / crop_width) * image_width`. This ensures the crosshair appears at the correct position within the zoomed crop.
-
-### Coordinate Convergence
-
-The V4 agent converges through a **zoom hierarchy**:
-
-```
-Iteration 1: Phase 1 finds grid cell (5, 4) → Phase 2 zooms in → crosshair at (715, 812)
-Iteration 2: Target not at crosshair → re-estimate to sub-cell (7, 2) → (659, 991)  
-Iteration 3: Target confirmed at crosshair → native (1265, 1070), high confidence, 3 iterations
-```
-
-**Phase 1** gives ~8× precision (screen divided into 64 cells).  
-**Phase 2** adds another 8× precision (each cell subdivided into 64 sub-cells).  
-This gives **~64× effective resolution** over the original screen in just 2 LLM calls.
-
-**Depth reduction** — If the target is not found in the current crop, the agent backs out to the full-screen grid and searches from a different cell. This prevents getting stuck in an area where the target doesn't exist.
+| Tool | Description |
+|------|-------------|
+| `click_element(selector, double_click=False)` | Move mouse to element center + physical left-click |
+| `type_text(selector, text)` | Type text into an input field |
+| `find_element_tool(selector)` | Find a single element by selector |
+| `find_elements_tool(selector)` | Find all elements matching a selector |
+| `read_accessibility_tree(selector, depth, verbose)` | Read UIA tree from root or a specific element |
+| `get_top_level_windows(verbose)` | List all top-level windows |
+| `get_focused_windows()` | Get the currently focused window |
+| `get_interactable_elements(scope, max_depth, verbose)` | List all clickable/typeable elements |
+| `get_focused_element_info()` | Get info about the focused element |
+| `get_element_at_point(x, y)` | Get element at screen coordinates |
+| `scroll_element(selector, direction, amount)` | Scroll an element |
+| `expand_element(selector)` | Expand a tree item/combo box |
+| `collapse_element(selector)` | Collapse a tree item/combo box |
+| `mouse_click(button="left")` | Physical mouse click at current position |
+| `echo(text)` | Test tool — echo input |
+| `get_time()` | Test tool — current time |
 
 ---
 
-## Key Concepts
+## Example Workflows
 
-### 1. 8×8 Grid Overlay with Crop-and-Zoom
+### Launch Notepad
 
-The V4 agent overlays a yellow 8×8 grid (125px intervals in normalized 0-1000 space) on screenshots. Zero-indexed row/column labels (0-7) let the LLM identify grid cells precisely. After Phase 1 identifies a cell, the agent crops to that cell and draws a fresh 8×8 sub-grid, enabling 64× finer precision.
+```
+Task: Open Notepad
 
-### 2. Dual-Gate Verification
-
-```python
-if target_in_grid is True and target_at_crosshair is True:
-    return LocateResult(...)  # SUCCESS
+1. get_top_level_windows() → Notepad not running
+2. get_interactable_elements(scope="desktop") → Found Taskbar
+3. click_element("name:Start") → Start Menu opens
+4. click_element("name:Search", double_click=True) → Search overlay opens
+5. type_text("name:Search box", "notepad") → Search results appear
+6. get_top_level_windows() → "Untitled - Notepad" found
+7. ✅ Task complete
 ```
 
-Two separate LLM checks must both pass: the target must be visible in the grid region **and** the crosshair must be positioned directly on the target.
+### Open File in VLC
 
-### 3. Local Crosshair Design
-
-Local ticks instead of screen-wide lines: 25px ticks with 6px gap, 2px center dot, 14px target ring. Prevents visual contact with nearby UI elements.
-
-### 4. History Tracking
-
-Previous crosshair positions are recorded as colored markers (T1=cyan, T2=magenta, T3=green, T4=orange, T5=cyan2, T6=pink), each labeled with exact normalized coordinates. Provides spatial context for the LLM.
-
-### 5. Depth Reduction
-
-If the target is not visible in the current crop, the agent discards the crop and returns to the full-screen grid to search a different cell. This prevents infinite loops in regions where the target doesn't exist.
-
-### 6. Human-Like Mouse Movement
-
-```python
-t = pytweening.easeInOutQuad(i / steps)
-curr_x = (1-t)**2 * start_x + 2*(1-t)*t * mid_x + t**2 * target_x
 ```
+Task: Open VLC, select Media → Open File
 
-Smooth Bezier-style easing with randomized perturbations mimics natural human cursor movement.
+1. get_top_level_windows() → VLC not running
+2. click_element("name:Start") → Start Menu opens
+3. type_text("name:Search box", "vlc") → VLC result appears
+4. click_element("name:VLC media player", double_click=True) → VLC launches
+5. get_top_level_windows() → VLC confirmed running
+6. read_accessibility_tree("name:VLC media player") → Found "Media Alt+M" menu
+7. click_element("name:Media Alt+M") → Media dropdown opens
+8. get_interactable_elements(scope="foreground") → Found "Open File... Ctrl+O"
+9. click_element("name:Open File... Ctrl+O") → File dialog opens
+10. ✅ Task complete
+```
 
 ---
 
-## API Reference
+## Milestone 1 — Agent Tool Calling Analysis
 
-### `SelfCorrectingVisionAgentV4`
+### High-Level Understanding of Tool Calling
 
-- `locate_element(target, max_iterations=5)` -> `LocateResult`
-- `analyze_current_screen(prompt)` -> text description
+The agent uses a **ReAct loop** (LangGraph `create_react_agent`) to drive Windows GUI automation via UI Automation (UIA). The flow is:
 
-### Tool Functions (`agent.tools`)
+1. **Context gathering** — The agent calls `get_top_level_windows()`, `get_interactable_elements()`, or `read_accessibility_tree()` to understand what is on screen before acting.
+2. **Element identification** — The agent uses `find_element_tool()` or `find_elements_tool()` with selectors like `name:Start`, `name:Search`, `name:Search box` to locate a specific UI element and obtain its bounding rectangle.
+3. **Physical click** — `click_element()` moves the physical mouse cursor to the element's bounding-box center (via `SetCursorPos`), waits 0.5s, then performs a physical left-click (via `mouse_event` with `MOUSEEVENTF_ABSOLUTE`). After clicking, it returns the current UI state (interactable elements + focused windows) so the agent sees what new UI appeared.
+4. **Text input** — `type_text()` focuses the element via UIA patterns and sends keystrokes. After typing, it returns the current UI state so the agent can see newly appeared elements (e.g., search results).
+5. **Verification** — The agent re-checks `get_top_level_windows()` to confirm the target application window appeared.
 
-| Function                 | Description                             |
-| ------------------------ | --------------------------------------- |
-| `move_mouse(prompt)`     | Move cursor to target GUI element       |
-| `analyze_screen(prompt)` | Describe current screen state           |
-| `left_click()`           | Click at current cursor position        |
-| `right_click()`          | Right-click at current cursor position  |
-| `double_click()`         | Double-click at current cursor position |
-| `type_text(text)`        | Type text with human-like delays        |
-| `press_key(key)`         | Press a single key                      |
-| `execute_hotkey(keys)`   | Execute keyboard hotkey combo           |
+### What Won
 
-### `LocateResult`
+| Area | Detail |
+|------|--------|
+| **Agent framework** | Reverted from `create_deep_agent` (Deep Agents) to `create_react_agent` (LangGraph). Deep Agents caused over-exploration, todo-list planning loops, and incorrect tool selection (e.g., using `grep` instead of clicking UI elements). The plain ReAct loop is more deterministic for GUI automation. |
+| **Mouse movement** | `move_mouse()` now uses `SetCursorPos(x, y)` instead of `SendInput` with normalized coordinates. Previously `SendInput` returned success but the cursor never physically moved. Now the cursor reliably moves to the element's center. |
+| **Mouse click** | `mouse_click()` now uses `mouse_event` with `MOUSEEVENTF_ABSOLUTE` + normalized coordinates instead of `SendInput` with relative `dx=0, dy=0`. Previously Windows never processed it as a real click at the cursor location. Now the Start Menu opens when clicking the Start button. |
+| **Click timing** | `click_element()` waits 0.5s after moving the mouse before clicking, giving the cursor time to settle. |
+| **Feedback state** | `click_element()` and `type_text()` return a trimmed `CURRENT UI STATE` block after every action (interactable elements + focused windows). This lets the agent see what new UI elements appeared (e.g., Start Menu, Search box) and correct its selector if needed. The output is capped at 50 elements with only `name`, `control_type`, and `selector` to prevent LLM context bloat. |
+| **Tool registry** | Removed `launch_app` (unreliable fallback) and `mouse_move` (agent should use `click_element`). Tool count reduced to 15. |
+| **End-to-end success** | The agent successfully opened Notepad: clicked Start → opened Start Menu → clicked Search → typed "notepad" → found "Untitled - Notepad" in top-level windows → confirmed task complete. |
 
-Dataclass with `target`, `x`, `y`, `confidence`, `iterations`, `screen_width`, `screen_height`.
+### What Did Not Work
 
----
+| Area | Detail |
+|------|--------|
+| **Start Menu via UIA InvokePattern** | Pure UIA `Invoke()` on the Start button does not reliably open the Start Menu. Physical mouse click via `click_element()` is required. |
+| **`type_text` without physical click** | `type_text()` previously used UIA `ValuePattern`/`SetFocus`/`SendKeys` without clicking first. Windows 11's modern XAML search box often doesn't respond to pure UIA text injection. The agent now physically clicks via `click_element()` before typing. |
+| **Launching via `launch_app`** | Removed because the Start Menu path now works via physical clicks. Direct executable path was brittle across different installations. |
+| **`grep` tool misuse** | Deep Agents would call `grep` (code-search tool) instead of UIA tools when trying to locate UI elements. Eliminated by switching to plain ReAct. |
+| **LLM rate limits** | Free-tier OpenRouter models (`nvidia/nemotron-3.5-lightning:free`, `liquid/lfm-3-1.7b:free`) hit 429 rate limits quickly, especially with large feedback-state context. Each LLM turn takes 3–60 seconds. |
 
-## Logging & Token Tracking
+### Current Tool Registry (15 tools)
 
-Every session of `SelfCorrectingVisionAgentV4` automatically creates a timestamped log file in the `.logs/` directory.
-
-### Log File Naming
-
-Each time `main.py` is run, a new log file is created named with the session start timestamp:
-
-```
-.logs/
-└── 2025-09-25_14-30-00_agent.log
-```
-
-Log files are **never truncated** — they append to existing files.
-
-### What Gets Logged
-
-All log entries are prefixed with an ISO timestamp:
-
-```
-[2025-09-25 14:30:00] [INFO] Session started | Model: qwen3-vl:8b-instruct | Context Window: 262144 | Log file: 2025-09-25_14-30-00_agent.log
-[2025-09-25 14:30:01] [DEBUG] Image: iter_0.png | Size: 124800 bytes | Format: PNG | Mode: RGB
-[2025-09-25 14:30:05] [INFO] LLM Call #1 | Prompt tokens: 4521 | Completion tokens: 1832 | Cumulative total: 6353 | Context: 262144 | Remaining: 255791 | Usage: 2.42%
-```
-
-### Token Counting
-
-The agent uses **LlamaIndex's `TokenCountingHandler`** to track every LLM interaction:
-
-- **Prompt tokens** — tokens sent to the model (input)
-- **Completion tokens** — tokens received from the model (output)
-- **Cumulative total** — running sum of all tokens across the session
-
-### Context Size & Token Length Incrementer
-
-The `TokenIncrementer` tracks token consumption against the configured `context_window`:
-
-| Metric | Description |
-|---|---|
-| `context_window` | Maximum tokens the model can process (from `.env`) |
-| `cumulative_total` | Running total of all tokens used so far |
-| `remaining_tokens` | Tokens left before hitting the limit |
-| `percent_used` | Percentage of context window consumed |
-| `percent_remaining` | Percentage of context window remaining |
-| `call_count` | Total number of LLM calls made in the session |
-
-Each LLM call increments the counter, so you can monitor how close the session is to exhausting the context window.
-
-### Accessing Token Data Programmatically
-
-```python
-from agent.self_correcting_vision_agent_4 import SelfCorrectingVisionAgentV4
-import agent.logger_setup as log_setup
-
-agent = SelfCorrectingVisionAgentV4(verbose=True)
-result = agent.locate_element(target="chrome icon")
-
-# Get the token incrementer summary
-inc = log_setup.get_token_incrementer()
-print(f"Total tokens: {inc.cumulative_total}")
-print(f"Context window: {inc.context_window}")
-print(f"Remaining: {inc.remaining_tokens}")
-print(f"Usage: {inc.percent_used}%")
-print(f"Total LLM calls: {inc._call_count}")
-```
-
-### Log Level
-
-- `DEBUG` — Image details, prompts sent, full LLM responses
-- `INFO` — Session start/end, token summaries, LLM call summaries
-- `STEP` — Iteration progress, coordinate updates
-- `DONE` — Successful target confirmation
-- `ERROR` — Failed JSON parsing, unexpected responses
+`echo`, `get_time`, `click_element`, `type_text`, `find_element_tool`, `find_elements_tool`, `read_accessibility_tree`, `get_focused_element_info`, `get_element_at_point`, `scroll_element`, `expand_element`, `collapse_element`, `get_top_level_windows`, `get_focused_windows`, `get_interactable_elements`
 
 ---
 
 ## Troubleshooting
 
-- **Module not found** - Run from project root directory
-- **Model timeout** - Check Ollama/OpenRouter, increase `request_timeout`
-- **False positives** - Set `cleanup_screenshots=False`, review `iter_*.png`
-- **False negatives** - Be more specific, increase `max_iterations` to 8+
-- **Crosshair misalignment** - Ensure `crop_region` coordinates are correctly mapped; review `.logs/` for coordinate log lines
-- **Model not responding** - Check model is loaded and running, increase `request_timeout`
-
-### Debugging
-
-```python
-agent = SelfCorrectingVisionAgentV4(cleanup_screenshots=False)
-result = agent.locate_element(target="my target")
-# iter_0.png through iter_N.png preserved in working directory
-```
+| Problem | Solution |
+|---------|----------|
+| `ImportError: cannot import name 'create_agent'` | Fixed — uses `langgraph.prebuilt.create_react_agent` now |
+| Start Menu doesn't open | `click_element` now physically clicks; verify `SetCursorPos` works |
+| Click doesn't register | `mouse_click` uses `mouse_event` with `MOUSEEVENTF_ABSOLUTE` |
+| Agent can't find search box | Feedback state shows actual control types — use `name:`, `id:`, or `class:` accordingly |
+| 429 rate limit | Free OpenRouter tier is rate-limited; use a paid model or wait |
+| No `.env` | Create one with `MODEL_PROVIDER`, `MODEL_NAME`, `OPENROUTER_API_KEY` |
+| Log files | Per-run logs in `gui_agent/.logs/` |
 
 ---
 

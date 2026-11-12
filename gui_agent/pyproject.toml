@@ -1,0 +1,59 @@
+[project]
+name = "gui-agent"
+version = "0.1.0"
+description = "Windows GUI automation agent using UI Automation"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    # LangGraph/LangChain
+    "langgraph>=0.2.0",
+    "langchain-core>=0.3.0",
+    "langchain-openai>=0.2.0",
+    
+    # Windows
+    "uiautomation>=2.1.0; sys_platform == 'win32'",
+    "pywinauto>=0.6.8; sys_platform == 'win32'",
+    "pywin32>=306; sys_platform == 'win32'",
+    
+    # Common
+    "pydantic>=2.0",
+    "pydantic-settings>=2.0",
+    "pyyaml>=6.0",
+    "python-dotenv>=1.0",
+    "numpy>=1.24",
+    "pillow>=10.0",
+    "structlog>=24.0",
+    "tenacity>=8.0",
+]
+
+[project.optional-dependencies]
+# Future: macOS support
+macos = [
+    "pyobjc-framework-ApplicationServices>=10.2; sys_platform == 'darwin'",
+    "pyobjc-framework-Quartz>=10.2; sys_platform == 'darwin'",
+    "pyobjc-framework-Cocoa>=10.2; sys_platform == 'darwin'",
+]
+# Future: Vision fallback (template matching, VLM)
+vision = ["opencv-python>=4.8", "onnxruntime>=1.16", "transformers>=4.35"]
+# Future: Heavy web automation
+playwright = ["playwright>=1.40"]
+dev = ["pytest>=7.4", "pytest-asyncio>=0.21", "ruff>=0.3", "mypy>=1.8"]
+
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["gui_agent*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+lint.select = ["E", "F", "I", "N", "W", "UP", "B", "C4", "SIM", "T20"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false

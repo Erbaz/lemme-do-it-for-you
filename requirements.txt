@@ -6,3 +6,14 @@ python-dotenv
 pyautogui
 pillow
 keyboard
+torch
+torchvision
+transformers
+peft
+safetensors
+accelerate
+huggingface-hub
+pydantic
+fastapi
+uvicorn
+python-multipart
