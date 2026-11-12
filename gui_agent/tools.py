@@ -27,8 +27,8 @@ from gui_agent.windows.tools.uia_tools import (
     find_elements_tool,
     # mouse_move,  # Temporarily disabled - use click_element instead
     mouse_click,
+    press_key,
     read_accessibility_tree,
-    get_focused_element_info,
     get_element_at_point,
     scroll_element,
     expand_element,
@@ -49,8 +49,8 @@ __all__ = [
     "find_elements_tool",
     # "mouse_move",  # Temporarily disabled - use click_element instead
     "mouse_click",
+    "press_key",
     "read_accessibility_tree",
-    "get_focused_element_info",
     "get_element_at_point",
     "scroll_element",
     "expand_element",

@@ -187,9 +187,14 @@ def double_click_element(element: auto.Control) -> bool:
     return False
 
 
-def type_text(element: auto.Control, text: str, clear_first: bool = True) -> bool:
-    """Type text into element using ValuePattern or SendKeys."""
-    # Try ValuePattern first
+def type_text(element: auto.Control, text: str) -> bool:
+    """Type text into element using ValuePattern or SendKeys.
+
+    Focuses the element first, then types the text literally. No modifier
+    keys (e.g. Ctrl+A) are sent — callers that need to clear the field
+    should do so explicitly before typing.
+    """
+    # Try ValuePattern first (fastest, most reliable for Edit controls)
     if set_value(element, text):
         return True
 
@@ -197,8 +202,6 @@ def type_text(element: auto.Control, text: str, clear_first: bool = True) -> boo
     try:
         element.SetFocus()
         from gui_agent.common.input import send_keys
-        if clear_first:
-            send_keys("^a")  # Ctrl+A to select all
         return send_keys(text)
     except Exception:
         return False

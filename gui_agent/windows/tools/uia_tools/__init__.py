@@ -6,8 +6,8 @@ from .find_element import find_element_tool
 from .find_elements import find_elements_tool
 # from .mouse_move import mouse_move  # Temporarily disabled - use click_element instead
 from .mouse_click import mouse_click
+from .press_key import press_key
 from .read_accessibility_tree import read_accessibility_tree
-from .get_focused_element_info import get_focused_element_info
 from .get_element_at_point import get_element_at_point
 from .scroll_element import scroll_element
 from .expand_element import expand_element
@@ -23,8 +23,8 @@ __all__ = [
     "find_elements_tool",
     # "mouse_move",  # Temporarily disabled - use click_element instead
     "mouse_click",
+    "press_key",
     "read_accessibility_tree",
-    "get_focused_element_info",
     "get_element_at_point",
     "scroll_element",
     "expand_element",

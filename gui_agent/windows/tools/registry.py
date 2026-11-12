@@ -6,8 +6,9 @@ from gui_agent.tools import (
     find_element_tool,
     find_elements_tool,
     # mouse_move,  # Temporarily disabled - use click_element instead
+    mouse_click,
+    press_key,
     read_accessibility_tree,
-    get_focused_element_info,
     get_element_at_point,
     scroll_element,
     expand_element,
@@ -26,8 +27,9 @@ TOOL_REGISTRY = [
         find_element_tool,
         find_elements_tool,
         # mouse_move,  # Temporarily disabled - use click_element instead
+        mouse_click,
+        press_key,
         read_accessibility_tree,
-        get_focused_element_info,
         get_element_at_point,
         scroll_element,
         expand_element,
