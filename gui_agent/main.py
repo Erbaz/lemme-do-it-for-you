@@ -1,4 +1,4 @@
-"""CLI entry point for the GUI Agent."""
+﻿"""CLI entry point for the GUI Agent."""
 
 import os
 import sys
@@ -30,6 +30,7 @@ from gui_agent.windows.tools.registry import TOOL_REGISTRY
 
 # Import system prompt from separate file
 from gui_agent.sys_prompt import SYSTEM_PROMPT
+from gui_agent.common.gui_state import gui_state
 
 try:
     from langchain_openai import ChatOpenAI
@@ -162,8 +163,18 @@ def main():
 
     # Create agent
     tools = load_tools()
-    logger.info("Creating agent", tool_count=len(tools), tool_names=[t.name for t in tools])
-    agent = langchain_create_agent(llm, tools, SYSTEM_PROMPT)
+    gui_context = gui_state.get_context()
+    system_prompt_with_gui = SYSTEM_PROMPT
+    if gui_context:
+        system_prompt_with_gui = (
+            SYSTEM_PROMPT
+            + chr(10) + chr(10) + "## CURRENT GUI STATE" + chr(10)
+            + gui_context
+            + chr(10)
+        )
+    else:
+        system_prompt_with_gui = SYSTEM_PROMPT
+    agent = langchain_create_agent(llm, tools, system_prompt_with_gui)
 
     # Invoke agent with timeout
     from langchain_core.messages import HumanMessage
@@ -201,3 +212,6 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
+
+
+

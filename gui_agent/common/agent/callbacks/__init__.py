@@ -1,4 +1,4 @@
-"""Callbacks package - verbose tracing for the GUI agent."""
+﻿"""Callbacks package - verbose tracing for the GUI agent."""
 
 import structlog
 from langchain_core.callbacks import BaseCallbackHandler
@@ -8,7 +8,9 @@ logger = structlog.get_logger("gui_agent.callbacks")
 
 
 class GuiAgentCallbackHandler(BaseCallbackHandler):
-    """Callback handler that logs every ReAct step for debugging."""
+    """Callback handler that logs every ReAct step and refreshes GUI state."""
+
+    ACTION_TOOLS = {"click_element", "type_text", "press_key"}
 
     def __init__(self, log_to_file: bool = True):
         self.log_to_file = log_to_file
@@ -44,6 +46,15 @@ class GuiAgentCallbackHandler(BaseCallbackHandler):
             f"TOOL END: output={output_str}",
             output=output_str,
         )
+
+        # Refresh foreground GUI snapshot after action-emitting tools
+        tool_name = kwargs.get("name", "")
+        if tool_name in self.ACTION_TOOLS:
+            try:
+                from gui_agent.common.gui_state import gui_state
+                gui_state.refresh_foreground_snapshot(max_depth=5)
+            except Exception as e:
+                logger.error("Failed to refresh GUI state", error=str(e))
 
     def on_tool_error(
         self,
@@ -103,6 +114,16 @@ class GuiAgentCallbackHandler(BaseCallbackHandler):
             chain=chain_name,
             inputs=str(inputs)[:300],
         )
+
+        # Initialize desktop snapshot at session start
+        try:
+            from gui_agent.common.gui_state import gui_state
+            gui_state.init_desktop_snapshot(max_depth=5)
+            # Do NOT refresh foreground here — let it populate on first action
+            # so an unrelated focused window (e.g., Notepad already open) does not
+            # hijack the agent's initial context
+        except Exception as e:
+            logger.error("Failed to initialize GUI state", error=str(e))
 
     def on_chain_end(
         self,
