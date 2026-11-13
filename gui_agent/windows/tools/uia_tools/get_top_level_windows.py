@@ -1,4 +1,4 @@
-"""Get all top-level visible windows on screen."""
+﻿"""Get all top-level visible windows on screen."""
 
 from langchain_core.tools import tool
 import json
@@ -25,6 +25,11 @@ def _build_window_selector(element: auto.Control) -> str:
 @tool
 def get_top_level_windows(verbose: bool = False) -> str:
     """Get all top-level visible windows on screen (first visual layer).
+
+    Use this FIRST to check what applications are currently running.
+    Returns only top-level windows — not their children or internal controls.
+    Best for: confirming an app is already open, getting window selectors,
+    and seeing the high-level screen layout.
 
     Args:
         verbose: If False (default), returns compact summary with name and selector only.

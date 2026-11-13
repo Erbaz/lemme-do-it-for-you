@@ -1,4 +1,7 @@
-"""Read the accessibility tree starting from root or a specific element."""
+"""Read the accessibility tree starting from root or a specific element.
+
+    Use this ONLY when you need to understand a specific window's internal UI hierarchy.
+    Do not use this for general discovery — use get_interactable_elements() or get_top_level_windows() instead."""
 
 from langchain_core.tools import tool
 import json

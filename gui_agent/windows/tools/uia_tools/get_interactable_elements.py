@@ -1,4 +1,4 @@
-"""Get all mouse-interactable elements on screen."""
+﻿"""Get all mouse-interactable elements on screen."""
 
 from langchain_core.tools import tool
 import json
@@ -120,11 +120,15 @@ def _collect_interactable(control: auto.Control, results: list, max_depth: int =
 
 @tool
 def get_interactable_elements(max_depth: int = 3, scope: str = "all", verbose: bool = False) -> str:
-    """Get all mouse-interactable elements on screen.
+    """Get all mouse-clickable/typeable elements on screen.
+
+    Use this to find clickable targets (buttons, edits, list items, etc.)
+    within a specific scope. Returns selectors you can pass directly to
+    click_element() or type_text().
 
     Args:
         max_depth: Maximum tree depth to traverse (default 3)
-        scope: "foreground" | "all_windows" | "desktop" (default: "all")
+        scope: "foreground" (focused window only) | "all_windows" | "desktop" (default: "all")
         verbose: If False (default), returns compact summary with name, selector, and control_type only.
                  If True, returns full details including bounding_rectangle, class_name, automation_id.
 
@@ -160,3 +164,4 @@ def get_interactable_elements(max_depth: int = 3, scope: str = "all", verbose: b
         return json.dumps(results, indent=2)
     except Exception as e:
         return f"Error getting interactable elements: {str(e)}"
+
