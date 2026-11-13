@@ -5,6 +5,7 @@ import json
 
 from gui_agent.windows.uia.locator import find_element, get_root
 from gui_agent.windows.uia.patterns import get_element_info
+from gui_agent.common.selector_tracker import selector_tracker
 
 
 @tool
@@ -22,10 +23,14 @@ def find_element_tool(selector: str) -> str:
     Returns:
         Element info as JSON string or error message
     """
+    if selector_tracker.is_failed(selector):
+        return f"Selector previously failed: {selector}"
+
     try:
         root = get_root()
         element = find_element(root, selector)
         if element is None:
+            selector_tracker.record_failure(selector)
             return f"Element not found: {selector}"
 
         info = get_element_info(element)

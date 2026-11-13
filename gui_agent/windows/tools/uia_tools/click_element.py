@@ -1,4 +1,4 @@
-"""Click a UI element by selector - pure physical mouse click with accessibility tree verification."""
+﻿"""Click a UI element by selector - pure physical mouse click with accessibility tree verification."""
 
 import time
 from langchain_core.tools import tool
@@ -9,6 +9,7 @@ import structlog
 from gui_agent.windows.uia.locator import find_element, get_root
 from gui_agent.common.input import move_mouse, mouse_click
 from gui_agent.windows.uia.patterns import get_bounding_rectangle
+from gui_agent.common.selector_tracker import selector_tracker
 from gui_agent.windows.tools.uia_tools.read_accessibility_tree import _build_tree
 from gui_agent.windows.tools.uia_tools.get_interactable_elements import _collect_interactable
 from gui_agent.windows.tools.uia_tools.get_focused_windows import get_focused_windows as _get_focused_windows
@@ -72,10 +73,14 @@ def click_element(selector: str, double_click: bool = False) -> str:
     Returns:
         Success or error message
     """
+    if selector_tracker.is_failed(selector):
+        return f"Selector previously failed: {selector}"
+
     try:
         root = get_root()
         element = find_element(root, selector)
         if element is None:
+            selector_tracker.record_failure(selector)
             return (
                 f"Selector is not correct: element not found for '{selector}'.\n"
                 f"Try exploring the accessibility tree to see what elements are available.\n"
@@ -85,6 +90,7 @@ def click_element(selector: str, double_click: bool = False) -> str:
         # Read the accessibility tree of the target element to verify it has content
         tree = _build_tree(element, 1, 5, verbose=True)
         if not tree or (not tree.get("children") and not tree.get("name")):
+            selector_tracker.record_failure(selector)
             return (
                 f"Selector is not correct: '{selector}' has no accessible children.\n"
                 f"Try exploring the accessibility tree to see what elements are available.\n"
@@ -93,6 +99,7 @@ def click_element(selector: str, double_click: bool = False) -> str:
 
         rect = get_bounding_rectangle(element)
         if not rect:
+            selector_tracker.record_failure(selector)
             return f"Element has no bounding rectangle: {selector}"
 
         center_x = (rect.left + rect.right) // 2
