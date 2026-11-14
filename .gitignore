@@ -6,3 +6,14 @@
 **/*.pyo
 .vscode
 .dataset
+
+# workflow_scriber generated artifacts (plan section 11)
+workflow_scriber/*.jsonl
+workflow_scriber/*.json
+workflow_scriber/*.log
+workflow_scriber/.logs/
+workflow_scriber/recorded_flows/*.json
+workflow_scriber/recorded_flows/*.events.txt
+
+# uiautomation writes this next to the cwd on every run
+@AutomationLog.txt
