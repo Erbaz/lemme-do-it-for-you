@@ -1,4 +1,4 @@
-﻿"""CLI entry point for the GUI Agent."""
+"""CLI entry point for the GUI Agent."""
 
 import os
 import sys
@@ -23,6 +23,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from gui_agent.common.platform.detector import PlatformDetector
 from gui_agent.common.utils.logging import setup_logging
 from gui_agent.common.utils.file_logging import setup_file_logging, get_log_file
+from gui_agent.common.utils.run_metrics import RunMetricsCollector, generate_html_report, REPORTS_DIR
 from gui_agent.common.agent.callbacks import GuiAgentCallbackHandler
 from gui_agent.common.agent import langchain_create_agent
 from gui_agent.windows.tools.registry import TOOL_REGISTRY
@@ -182,30 +183,55 @@ def main():
     logger.info("Invoking agent", task=args.task)
 
     start_time = time.time()
+    callback_handler = GuiAgentCallbackHandler()
+    # Wire metrics info into the callback handler's metrics collector
+    m = callback_handler.metrics
+    m.task = args.task
+    m.timeout_seconds = args.timeout
+    m.platform = platform.value
+    m.llm_model = getattr(llm, "model_name", None) or getattr(llm, "model", "") or ""
+    m.llm_provider = os.getenv("MODEL_PROVIDER", "openrouter")
+    m.record_run_start()
     try:
         result = run_agent_with_timeout(
             agent,
             {"messages": [HumanMessage(content=args.task)]},
             timeout_seconds=args.timeout,
-            callbacks=[GuiAgentCallbackHandler()],
+            callbacks=[callback_handler],
         )
         elapsed = time.time() - start_time
         logger.info("Agent invocation completed", elapsed_seconds=elapsed)
+        callback_handler.metrics.record_run_end("completed")
+        callback_handler.metrics.completion_text = ""
+        # Extract completion text from result messages
+        for msg in result.get("messages", []):
+            if hasattr(msg, "content") and msg.content:
+                callback_handler.metrics.completion_text = str(msg.content)
+        # Print result
+        for msg in result.get("messages", []):
+            if hasattr(msg, "content") and msg.content:
+                print(msg.content)
     except TimeoutError as e:
         elapsed = time.time() - start_time
         logger.error("Agent invocation timed out", error=str(e), elapsed_seconds=elapsed)
         print(f"Agent invocation timed out after {elapsed:.1f}s: {e}")
+        callback_handler.metrics.record_run_end("timed_out")
         return 1
     except Exception as e:
         elapsed = time.time() - start_time
         logger.error("Agent invocation failed", error=str(e), elapsed_seconds=elapsed, exc_info=True)
         print(f"Agent invocation failed after {elapsed:.1f}s: {e}")
+        callback_handler.metrics.record_run_end("errored")
         return 1
 
-    # Print result
-    for msg in result.get("messages", []):
-        if hasattr(msg, "content") and msg.content:
-            print(msg.content)
+    # Generate HTML report
+    try:
+        report_path = REPORTS_DIR / f"agent_run_report_{callback_handler.metrics.run_id}.html"
+        generate_html_report(callback_handler.metrics, report_path)
+        print(f"HTML report: {report_path}")
+        logger.info("HTML report generated", path=str(report_path))
+    except Exception as e:
+        logger.error("Failed to generate HTML report", error=str(e))
 
     return 0
 

@@ -1,23 +1,26 @@
-﻿"""Callbacks package - verbose tracing for the GUI agent."""
+"""Callbacks package - verbose tracing for the GUI agent."""
 
 import structlog
 from langchain_core.callbacks import BaseCallbackHandler
 from typing import Any, Dict, Optional
 
+from gui_agent.common.utils.run_metrics import RunMetricsCollector
+
 logger = structlog.get_logger("gui_agent.callbacks")
 
 
 class GuiAgentCallbackHandler(BaseCallbackHandler):
-    """Callback handler that logs every ReAct step and refreshes GUI state."""
+    """Callback handler that logs every ReAct step, collects metrics, and refreshes GUI state."""
 
     ACTION_TOOLS = {"click_element", "type_text", "press_key"}
 
     def __init__(self, log_to_file: bool = True):
         self.log_to_file = log_to_file
         self._step_count = 0
+        self.metrics = RunMetricsCollector()
 
     def _log(self, message: str, **kwargs) -> None:
-        """Log with optional file output."""
+        """Log with optional file output (clean structlog only, no print duplication)."""
         self._step_count += 1
         if self.log_to_file:
             print(f"[CALLBACK #{self._step_count}] {message}")
@@ -30,6 +33,7 @@ class GuiAgentCallbackHandler(BaseCallbackHandler):
         **kwargs: Any,
     ) -> None:
         tool_name = serialized.get("name", "unknown") if isinstance(serialized, dict) else "unknown"
+        self.metrics.record_tool_start(tool_name=tool_name, input_str=input_str)
         self._log(
             f"TOOL START: {tool_name}",
             tool=tool_name,
@@ -41,6 +45,9 @@ class GuiAgentCallbackHandler(BaseCallbackHandler):
         output: Any,
         **kwargs: Any,
     ) -> None:
+        tool_name = kwargs.get("name", "")
+        self.metrics.record_tool_end(output=output)
+
         output_str = str(output)[:1000]
         self._log(
             f"TOOL END: output={output_str}",
@@ -48,7 +55,6 @@ class GuiAgentCallbackHandler(BaseCallbackHandler):
         )
 
         # Refresh foreground GUI snapshot after action-emitting tools
-        tool_name = kwargs.get("name", "")
         if tool_name in self.ACTION_TOOLS:
             try:
                 from gui_agent.common.gui_state import gui_state
@@ -61,6 +67,7 @@ class GuiAgentCallbackHandler(BaseCallbackHandler):
         error: Exception,
         **kwargs: Any,
     ) -> None:
+        self.metrics.record_tool_error(error=error)
         self._log(
             f"TOOL ERROR: {error}",
             error=str(error),
@@ -73,6 +80,7 @@ class GuiAgentCallbackHandler(BaseCallbackHandler):
         **kwargs: Any,
     ) -> None:
         prompt_text = prompts[0] if prompts else ""
+        self.metrics.record_llm_start(prompt_text=prompt_text)
         self._log(
             f"LLM START: {len(prompt_text)} chars",
             prompt_preview=prompt_text[:300],
@@ -87,6 +95,10 @@ class GuiAgentCallbackHandler(BaseCallbackHandler):
             content = response.generations[0][0].text if response.generations else ""
         except Exception:
             content = str(response)[:500]
+        response_metadata = getattr(response, "llm_output", None) or {}
+        if isinstance(response_metadata, dict):
+            response_metadata = response_metadata.get("token_usage", response_metadata)
+        self.metrics.record_llm_end(completion_text=content, response_metadata=response_metadata)
         self._log(
             f"LLM END: {len(content)} chars",
             response_preview=content[:300],
