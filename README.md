@@ -87,7 +87,7 @@ lemme-do-it-for-you/
 │   │           └── get_interactable_elements.py
 │   └── .logs/               # Per-run timestamped log files (gitignored)
 ├── gui_agent.md             # Detailed implementation notes & Milestone 1
-├── gui-agent-plan.md        # Project plan
+├── .plans/gui-agent-plan.md # Project plan (gitignored)
 ├── README.md                # This file
 ├── requirements.txt         # Python dependencies
 ├── .env                     # API keys & model config (gitignored)
