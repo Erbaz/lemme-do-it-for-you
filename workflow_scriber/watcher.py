@@ -27,7 +27,7 @@ import win32gui
 import win32process
 
 from . import __version__
-from .discovery import DEFAULT_MAX_DEPTH, DiscoveryIndex
+from .discovery import DEFAULT_MAX_DEPTH, DiscoveryIndex, focused_element
 from .recorder import Record, Recorder
 from .win32_input import (
     HC_ACTION,
@@ -182,6 +182,10 @@ def _write_session(
             ("point", record.point),
             ("element", record.element),
             ("window", record.window),
+            ("focus", record.focus),
+            ("foreground", record.foreground),
+            ("visible", record.visible),
+            ("redacted", record.redacted),
         ):
             if value:
                 item[key] = value
@@ -210,7 +214,7 @@ def watch(
 
     index = DiscoveryIndex(max_depth=max_depth)
     count = index.build()
-    recorder = Recorder(index)
+    recorder = Recorder(index, focus=focused_element)
 
     started = _iso()
     session_id = "s_" + datetime.now().strftime("%Y%m%d_%H%M%S")

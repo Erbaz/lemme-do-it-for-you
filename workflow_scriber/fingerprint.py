@@ -55,6 +55,16 @@ def _usable_class(class_name: str) -> bool:
     )
 
 
+def is_meaningful_name(name: str) -> bool:
+    """A name a human could read: not an icon font glyph, not blank."""
+    stripped = name.strip()
+    return (
+        bool(stripped)
+        and not _has_private_use(name)
+        and any(ch.isalnum() for ch in stripped)
+    )
+
+
 def candidate_selectors(fp: "Fingerprint") -> List[str]:
     """Every selector likely to resolve to this element, best first."""
     out: List[str] = []
@@ -98,4 +108,4 @@ class Fingerprint:
         }
 
 
-__all__ = ["Fingerprint", "INTERACTIVE_TYPES", "candidate_selectors"]
+__all__ = ["Fingerprint", "INTERACTIVE_TYPES", "candidate_selectors", "is_meaningful_name"]

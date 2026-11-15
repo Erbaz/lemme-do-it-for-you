@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass
-from typing import List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import pythoncom
 import uiautomation as auto
@@ -23,7 +23,7 @@ from gui_agent.windows.tools.uia_tools.get_interactable_elements import (
     _build_selector,
 )
 
-from .fingerprint import INTERACTIVE_TYPES, Fingerprint
+from .fingerprint import INTERACTIVE_TYPES, Fingerprint, is_meaningful_name
 
 #: An ancestor covering this fraction of its top-level window is the window
 #: itself, not the thing the human meant to click. Without this a click on an
@@ -36,6 +36,10 @@ DEFAULT_MAX_DEPTH = 10
 
 #: Minimum seconds between two cache-miss rebuilds.
 REFRESH_INTERVAL_S = 0.75
+
+#: Named controls recorded per window change.
+MAX_VISIBLE = 40
+MAX_NAME_LEN = 120
 
 
 @dataclass(frozen=True)
@@ -197,8 +201,10 @@ class DiscoveryIndex:
 
             self._walk(child, out, stats, depth + 1, title, pid, context_area)
 
-    def find_at(self, x: int, y: int) -> Optional[DiscoveredElement]:
-        """Pick the element a human meant by (x, y).
+    def find_at(
+        self, x: int, y: int, pid: Optional[int] = None,
+    ) -> Optional[DiscoveredElement]:
+        """Pick the element a human meant by (x, y), optionally of one process.
 
         Interactive controls (button, item, edit, ...) win over the decorative
         child under the same point: a taskbar button contains a 24 px icon, and
@@ -208,6 +214,8 @@ class DiscoveryIndex:
         best: Optional[DiscoveredElement] = None
         best_key: Optional[Tuple[int, int, int]] = None
         for el in self._elements:
+            if pid is not None and el.fingerprint.pid != pid:
+                continue
             left, top, right, bottom = el.rect
             if left <= x <= right and top <= y <= bottom:
                 area = (right - left) * (bottom - top)
@@ -217,6 +225,32 @@ class DiscoveryIndex:
                     best = el
                     best_key = key
         return best
+
+    def has_window(self, title: str) -> bool:
+        return any(el.window_title == title for el in self._elements)
+
+    def visible(self, title: str, limit: int = MAX_VISIBLE) -> List[Dict[str, str]]:
+        """Named controls of one top-level window, top to bottom, deduplicated."""
+        named = sorted(
+            (el for el in self._elements
+             if el.window_title == title and is_meaningful_name(el.fingerprint.name)),
+            key=lambda el: (el.rect[1], el.rect[0]),
+        )
+        out: List[Dict[str, str]] = []
+        seen = set()
+        for el in named:
+            key = (el.control_type, el.fingerprint.name)
+            if key in seen:
+                continue
+            seen.add(key)
+            out.append({
+                "control_type": el.control_type,
+                "name": el.fingerprint.name.strip()[:MAX_NAME_LEN],
+                "selector": el.selector,
+            })
+            if len(out) >= limit:
+                break
+        return out
 
     def maybe_refresh(self, min_interval: float = REFRESH_INTERVAL_S) -> bool:
         """Rebuild at most once per interval. Returns True if it rebuilt."""
@@ -232,4 +266,22 @@ class DiscoveryIndex:
         return len(self._elements)
 
 
-__all__ = ["BuildStats", "DiscoveredElement", "DiscoveryIndex"]
+def focused_element() -> Optional[Dict[str, Any]]:
+    """Identity of the element that has keyboard focus, or None."""
+    try:
+        control = auto.GetFocusedControl()
+    except Exception:
+        return None
+    if control is None:
+        return None
+    return {
+        "control_type": _safe_str(control, "ControlTypeName"),
+        "name": _safe_str(control, "Name")[:MAX_NAME_LEN],
+        "automation_id": _safe_str(control, "AutomationId"),
+        "class_name": _safe_str(control, "ClassName"),
+        "pid": _safe_int(control, "ProcessId"),
+        "is_password": _safe_bool(control, "IsPassword"),
+    }
+
+
+__all__ = ["BuildStats", "DiscoveredElement", "DiscoveryIndex", "focused_element"]

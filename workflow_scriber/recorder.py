@@ -7,6 +7,11 @@ by recording latency.
 A click is recorded as the selector of the interactable element under the
 cursor. A double-click is modeled as an *upgrade* of the first click record
 rather than a second record, so replay does not click twice.
+
+Context for extraction rides along on each record: the focused element, the
+foreground window's element when the hit element belongs to another process,
+and the window's named controls when the foreground window changes. Typed
+characters are redacted while a password field has focus.
 """
 
 from __future__ import annotations
@@ -14,13 +19,16 @@ from __future__ import annotations
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 from .discovery import DiscoveryIndex
 from .fingerprint import candidate_selectors
+from .normalize import key_text
 
 DOUBLE_CLICK_S = 0.45
 DOUBLE_CLICK_PX = 6
+
+FocusProvider = Callable[[], Optional[Dict[str, Any]]]
 
 
 def _now_iso() -> str:
@@ -36,6 +44,10 @@ class Record:
     point: Optional[Dict[str, int]] = None
     element: Optional[Dict[str, Any]] = None
     window: Optional[Dict[str, Any]] = None
+    focus: Optional[Dict[str, Any]] = None
+    foreground: Optional[Dict[str, Any]] = None
+    visible: Optional[List[Dict[str, Any]]] = None
+    redacted: bool = False
     updated: bool = False
 
 
@@ -49,10 +61,15 @@ class _Pending:
 
 
 class Recorder:
-    def __init__(self, index: DiscoveryIndex) -> None:
+    def __init__(
+        self, index: DiscoveryIndex, focus: Optional[FocusProvider] = None,
+    ) -> None:
         self._index = index
+        self._focus = focus
         self._pending: Optional[_Pending] = None
         self._last_click: Optional[tuple] = None
+        self._last_title: Optional[str] = None
+        self._index_stale = False
         self._records: List[Record] = []
 
     # -- events -------------------------------------------------------------
@@ -105,10 +122,16 @@ class Recorder:
 
         if name in _MODIFIER_NAMES:
             return None
+        key = _sendkeys(name, frozenset(mods))
+        focus = self._focused()
+        redacted = bool(focus and focus.get("is_password")) and key_text(key) is not None
         record = Record(
             tool="press_key",
-            args={"key": _sendkeys(name, frozenset(mods))},
+            args={"key": "" if redacted else key},
+            note="redacted: typed into a password field" if redacted else "",
             ts=ts or _now_iso(),
+            focus=focus,
+            redacted=redacted,
         )
         self._records.append(record)
         return record
@@ -145,9 +168,18 @@ class Recorder:
                 element=element.fingerprint.to_dict(),
             )
         self._records.append(record)
+        self._index_stale = True
         return record
 
     # -- records ------------------------------------------------------------
+
+    def _focused(self) -> Optional[Dict[str, Any]]:
+        if self._focus is None:
+            return None
+        try:
+            return self._focus()
+        except Exception:  # noqa: BLE001 - UIA can fail on any call
+            return None
 
     def _element_at(self, x: int, y: int):
         element = self._index.find_at(x, y)
@@ -156,9 +188,44 @@ class Recorder:
             element = self._index.find_at(x, y)
         return element
 
+    def _window_context(
+        self, window: Optional[Dict[str, Any]]
+    ) -> Optional[List[Dict[str, Any]]]:
+        """Named controls of the foreground window, once per window change."""
+        title = (window or {}).get("title") or ""
+        if not title or title == self._last_title:
+            return None
+        self._last_title = title
+        if not self._index.has_window(title):
+            self._index.maybe_refresh()
+        return self._index.visible(title) or None
+
+    def _foreground_alternative(
+        self, pending: _Pending, element, window: Optional[Dict[str, Any]]
+    ) -> Optional[Dict[str, Any]]:
+        """The foreground window's element under the cursor, when the hit is not."""
+        pid = (window or {}).get("pid") or 0
+        if element is None or not pid or not element.fingerprint.pid:
+            return None
+        if element.fingerprint.pid == pid:
+            return None
+        alternative = self._index.find_at(pending.x, pending.y, pid=pid)
+        if alternative is None:
+            return None
+        selectors = candidate_selectors(alternative.fingerprint)
+        if not selectors:
+            return None
+        return {"element": alternative.fingerprint.to_dict(), "selectors": selectors}
+
     def _resolve(
         self, pending: _Pending, window: Optional[Dict[str, Any]]
     ) -> Record:
+        if self._index_stale:
+            # Scrolling moves items without changing any rect the index already
+            # holds, so a hit on the old snapshot is the container, not the item.
+            self._index.refresh()
+            self._index_stale = False
+        visible = self._window_context(window)
         element = self._element_at(pending.x, pending.y)
         candidates = candidate_selectors(element.fingerprint) if element else []
         base = dict(
@@ -166,6 +233,9 @@ class Recorder:
             point={"x": pending.x, "y": pending.y},
             element=element.fingerprint.to_dict() if element else None,
             window=window,
+            focus=self._focused(),
+            foreground=self._foreground_alternative(pending, element, window),
+            visible=visible,
         )
 
         if pending.button != "left":

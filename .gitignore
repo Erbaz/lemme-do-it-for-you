@@ -14,6 +14,9 @@ workflow_scriber/*.log
 workflow_scriber/.logs/
 workflow_scriber/recorded_flows/*.json
 workflow_scriber/recorded_flows/*.events.txt
+workflow_scriber/library/index.db
+workflow_scriber/library/index.db-*
+workflow_scriber/runs/
 
 # uiautomation writes this next to the cwd on every run
 @AutomationLog.txt

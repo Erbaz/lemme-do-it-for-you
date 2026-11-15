@@ -32,6 +32,7 @@ from gui_agent.windows.tools.uia_tools.scroll_element import scroll_element
 
 from workflow_scriber import RECORDED_FLOWS_DIR
 from workflow_scriber.fingerprint import Fingerprint, candidate_selectors
+from workflow_scriber.normalize import SELECTOR_TOOLS
 
 TOOLS = {
     "click_element": click_element,
@@ -46,8 +47,6 @@ SUCCESS_PREFIX = {
     "press_key": ("Pressed key:",),
     "scroll_element": ("Scrolled ",),
 }
-
-SELECTOR_TOOLS = {"click_element", "scroll_element"}
 
 DELAY_S = 0.3
 
@@ -142,6 +141,9 @@ def replay(flow: Path) -> int:
         tool = TOOLS.get(name)
         if tool is None:
             print(f"[{n}] FAIL unknown tool: {name}")
+            return 1
+        if action.get("redacted"):
+            print(f"[{n}] FAIL {name} was redacted (password field) and cannot be replayed")
             return 1
 
         if name in SELECTOR_TOOLS:
